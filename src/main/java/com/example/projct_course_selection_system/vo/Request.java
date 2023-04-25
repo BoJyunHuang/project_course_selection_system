@@ -29,7 +29,7 @@ public class Request {
 	private int credits; 
 	
 	@JsonProperty("course_list")
-	private List<Course> courseList;
+	private List<String> courseList;
 	
 	// 學員
 	private Student student;
@@ -82,10 +82,10 @@ public class Request {
 	public void setCredits(int credits) {
 		this.credits = credits;
 	}
-	public List<Course> getCourseList() {
+	public List<String> getCourseList() {
 		return courseList;
 	}
-	public void setCourseList(List<Course> courseList) {
+	public void setCourseList(List<String> courseList) {
 		this.courseList = courseList;
 	}
 	public Student getStudent() {
