@@ -34,7 +34,7 @@ public class CourseSelectionImpl implements CourseSelection {
 	@Override
 	public Response selectCourse(String studentID, List<String> courseList) {
 		// 0.防空、白
-		if (!StringUtils.hasText(studentID) || !CollectionUtils.isEmpty(courseList)) {
+		if (!StringUtils.hasText(studentID) || CollectionUtils.isEmpty(courseList)) {
 			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
 		}
 		// 1-1.查詢學生是否存在
@@ -42,17 +42,29 @@ public class CourseSelectionImpl implements CourseSelection {
 		if (!resStudent.isPresent()) {
 			return new Response(RtnCode.NOT_FOUND.getMessage());
 		}
-		// ***直接使用自訂方法，調閱學員課程
-		StudentService studentService = null;
-		Response student = studentService.courseSchedule(studentID);
-		// 1-2.確認課程存在，及確認修課人數
+		// 1-2.確認課程存在
 		List<Course> resCourse = courseDao.findAllById(courseList);
 		if (CollectionUtils.isEmpty(resCourse)) {
 			return new Response(RtnCode.NOT_FOUND.getMessage());
 		}
 		for (Course rC : resCourse) {
+			// 1-2-1.確認修課人數
 			if (rC.getPersonlimit() == 0) {
 				return new Response(RtnCode.FULLY_SELECTED.getMessage());
+			}
+			// 1-2-2.選課名單中不能撞名與互相衝堂
+			for (Course rCclone : resCourse) {
+				if (!rC.getCourseNumber().equals(rCclone.getCourseNumber())) {
+					if (rC.getCourseTitle().equals(rCclone.getCourseTitle())) {
+						return new Response(RtnCode.ALREADY_EXISTED.getMessage());
+					}
+					if (rC.getSchedule().equals(rCclone.getSchedule())) {
+						if (rC.getStartTime().isBefore(rCclone.getEndTime())
+								|| rCclone.getEndTime().isAfter(rCclone.getStartTime())) {
+							return new Response(RtnCode.INCORRECT.getMessage());
+						}
+					}
+				}
 			}
 		}
 		// 2-1.確認學分數是否足夠
@@ -60,32 +72,45 @@ public class CourseSelectionImpl implements CourseSelection {
 		for (Course rC : resCourse) {
 			expectCredits += rC.getCredits();
 		}
-		if (student.getStudent().getCreditsLimit() < expectCredits) {
-			return new Response(RtnCode.INCORRECT.getMessage());
-		}
-		// 2-2.避免重複學程(包含課名)，比對新課程是否衝堂
-		for (Course sC : student.getCourseList()) {
-			for (Course rC : resCourse) {
-				if (sC.getCourseNumber().equals(rC.getCourseNumber())
-						|| sC.getCourseTitle().equals(rC.getCourseTitle())) {
-					return new Response(RtnCode.ALREADY_EXISTED.getMessage());
+		List<Course> allCourse = courseDao.findAll();
+		List<Course> selectedCourses = new ArrayList<>();
+		if (StringUtils.hasText(resStudent.get().getCourseNumber())) {
+			// 確認學生學分數狀態
+			if (resStudent.get().getCreditsLimit() < expectCredits) {
+				return new Response(RtnCode.INCORRECT.getMessage());
+			}
+			// 紀錄已選取學分
+			for (Course c : allCourse) {
+				if (resStudent.get().getCourseNumber().contains(c.getCourseNumber())) {
+					selectedCourses.add(c);
 				}
-				if (rC.getSchedule().equals(sC.getSchedule())) {
-					if (rC.getStartTime().isBefore(sC.getEndTime()) || rC.getEndTime().isAfter(sC.getStartTime())) {
-						return new Response(RtnCode.INCORRECT.getMessage());
+			}
+			// 2-2.避免重複學程(包含課名)，比對新課程是否衝堂
+			for (Course sC : selectedCourses) {
+				for (Course rC : resCourse) {
+					if (sC.getCourseNumber().equals(rC.getCourseNumber())
+							|| sC.getCourseTitle().equals(rC.getCourseTitle())) {
+						return new Response(RtnCode.ALREADY_EXISTED.getMessage());
+					}
+					if (rC.getSchedule().equals(sC.getSchedule())) {
+						if (rC.getStartTime().isBefore(sC.getEndTime()) || rC.getEndTime().isAfter(sC.getStartTime())) {
+							return new Response(RtnCode.INCORRECT.getMessage());
+						}
 					}
 				}
 			}
 		}
-		// 3-1.設定課程狀態
-		for (Course rC : resCourse) {
-			rC.setPersonlimit(rC.getPersonlimit() - 1);
-			student.getCourseList().add(rC);
-		}
 		// 3-2.設定學生狀態
-		List<String> getNewCourseNumber = null;
-		for (Course sC : student.getCourseList()) {
-			getNewCourseNumber.add(sC.getCourseNumber());
+		List<String> getNewCourseNumber = new ArrayList<>();
+		if (!CollectionUtils.isEmpty(selectedCourses)) {
+			for (Course sC : selectedCourses) {
+				getNewCourseNumber.add(sC.getCourseNumber());
+			}
+		}
+		// 紀錄課程狀態
+		for (Course rC : resCourse) {
+			getNewCourseNumber.add(rC.getCourseNumber());
+			rC.setPersonlimit(rC.getPersonlimit() - 1);
 		}
 		String newCouresList = String.join(", ", getNewCourseNumber);
 		newCouresList = "{" + newCouresList + "}";
@@ -100,7 +125,7 @@ public class CourseSelectionImpl implements CourseSelection {
 	@Override
 	public Response withdrawCourse(String studentID, String courseNumber) {
 		// 0.防呆
-		if (StringUtils.hasText(studentID) || StringUtils.hasText(courseNumber)) {
+		if (!StringUtils.hasText(studentID) || !StringUtils.hasText(courseNumber)) {
 			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
 		}
 		// 1-1.查詢學生

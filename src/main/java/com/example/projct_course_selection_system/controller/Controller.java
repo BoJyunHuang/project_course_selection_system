@@ -46,7 +46,7 @@ public class Controller {
 				request.getSchedule(), request.getStartTime(), request.getEndTime(), request.getCredits());
 	}
 	
-	@DeleteMapping(value = "delete_course")
+	@GetMapping(value = "delete_course")
 	public Response deleteCourse(@RequestBody Request request) {
 		return courseService.deleteCourse(request.getCourseNumber());
 	}
@@ -56,7 +56,7 @@ public class Controller {
 		return studentService.addStudent(request.getStudentID(), request.getStudentName());
 	}
 	
-	@DeleteMapping(value = "delete_student")
+	@GetMapping(value = "delete_student")
 	public Response deleteStudent(@RequestBody Request request) {
 		return studentService.deleteStudent(request.getStudentID());
 	}

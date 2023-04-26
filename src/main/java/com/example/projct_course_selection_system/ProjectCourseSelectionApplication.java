@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ProjctSubjectSystemApplication {
+public class ProjectCourseSelectionApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ProjctSubjectSystemApplication.class, args);
+		SpringApplication.run(ProjectCourseSelectionApplication.class, args);
 	}
 
 }

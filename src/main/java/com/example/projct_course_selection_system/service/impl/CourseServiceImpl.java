@@ -55,8 +55,8 @@ public class CourseServiceImpl implements CourseService {
 		}
 		// 學分要與課堂時間"要"相差一小時內，不然學分與學習時數不相符
 		Duration duration = Duration.between(startTime, endTime);
-		if (LocalTime.of((credits), 0).getHour() < duration.toHours()
-				|| LocalTime.of((credits + 1), 0).getHour() > duration.toHours()) {
+		if (LocalTime.of((credits), 0).getHour() > duration.toHours()
+				|| LocalTime.of((credits + 1), 0).getHour() < duration.toHours()) {
 			return new Response(RtnCode.INCORRECT.getMessage());
 		}
 		// 確認有無重複課程
@@ -116,8 +116,8 @@ public class CourseServiceImpl implements CourseService {
 		}
 		// 學分要與課堂時間"要"相差一小時內，不然學分與學習時數不相符
 		Duration duration = Duration.between(startTime, endTime);
-		if (LocalTime.of((res.get().getCredits()), 0).getHour() < duration.toHours()
-				|| LocalTime.of((res.get().getCredits() + 1), 0).getHour() > duration.toHours()) {
+		if (LocalTime.of((res.get().getCredits()), 0).getHour() > duration.toHours()
+				|| LocalTime.of((res.get().getCredits() + 1), 0).getHour() < duration.toHours()) {
 			return new Response(RtnCode.INCORRECT.getMessage());
 		}
 		// 修正資料
@@ -152,8 +152,8 @@ public class CourseServiceImpl implements CourseService {
 		}
 		// 學分要與課堂時間"要"相差一小時內，不然學分與學習時數不相符
 		Duration duration = Duration.between(startTime, endTime);
-		if (LocalTime.of((credits), 0).getHour() < duration.toHours()
-				|| LocalTime.of((credits + 1), 0).getHour() > duration.toHours()) {
+		if (LocalTime.of((credits), 0).getHour() > duration.toHours()
+				|| LocalTime.of((credits + 1), 0).getHour() < duration.toHours()) {
 			return new Response(RtnCode.INCORRECT.getMessage());
 		}
 		// 查詢資料

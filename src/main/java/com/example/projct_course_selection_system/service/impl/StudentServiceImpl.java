@@ -57,17 +57,17 @@ public class StudentServiceImpl implements StudentService {
 			return new Response(RtnCode.NOT_FOUND.getMessage());
 		}
 		// 確認有無課程
-		if (res.get().getCourseNumber().length() != 0) {
-			String tempStr1 = res.get().getCourseNumber();
-			String tempStr2 = tempStr1.substring(0, tempStr1.length() - 1);
-			String[] listOfSelectedCourse = tempStr2.split(", ");
-			// 退選
-			if (listOfSelectedCourse.length != 0) {
-				for (String c : listOfSelectedCourse) {
-					courseSelection.withdrawCourse(studentID, c);
+			if (StringUtils.hasText(res.get().getCourseNumber())) {
+				String tempStr1 = res.get().getCourseNumber();
+				String tempStr2 = tempStr1.substring(0, tempStr1.length() - 1);
+				String[] listOfSelectedCourse = tempStr2.split(", ");
+				// 退選
+				if (listOfSelectedCourse.length != 0) {
+					for (String c : listOfSelectedCourse) {
+						courseSelection.withdrawCourse(studentID, c);
+					}
 				}
 			}
-		}
 		// 刪除學生
 		studentDao.deleteById(studentID);
 		return new Response(RtnCode.SUCCESSFUL.getMessage());
@@ -85,6 +85,9 @@ public class StudentServiceImpl implements StudentService {
 			return new Response(RtnCode.NOT_FOUND.getMessage());
 		}
 		// 取得學生課表(有可能空白)
+		if (!StringUtils.hasText(res.get().getCourseNumber())){
+			return new Response(RtnCode.NOT_FOUND.getMessage());
+		}
 		String selectedStr = res.get().getCourseNumber();
 		List<Course> allCourse = courseDao.findAll();
 		List<Course> selectedCourses = null;

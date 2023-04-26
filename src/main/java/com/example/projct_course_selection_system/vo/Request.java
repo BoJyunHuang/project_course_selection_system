@@ -34,10 +34,10 @@ public class Request {
 	// 學員
 	private Student student;
 	
-	@JsonProperty("course_ID")
+	@JsonProperty("student_ID")
 	private String studentID;
 	
-	@JsonProperty("course_name")
+	@JsonProperty("student_name")
 	private String studentName;
 	
 	public Course getCourse() {
