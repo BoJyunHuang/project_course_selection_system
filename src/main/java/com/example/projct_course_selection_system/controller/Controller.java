@@ -28,25 +28,13 @@ public class Controller {
 		return courseService.addCourse(request.getCourseNumber(), request.getCourseTitle(), request.getSchedule(),
 				request.getStartTime(), request.getEndTime(), request.getCredits());
 	}
-
-	@GetMapping(value = "revise_course_by_title")
-	public Response reviseCourseByTitle(@RequestBody Request request) {
-		return courseService.reviseCourseTitle(request.getCourseNumber(), request.getCourseTitle());
-	}
-
-	@GetMapping(value = "revise_course_by_schedule")
-	public Response reviseCourseBySchedule(@RequestBody Request request) {
-		return courseService.reviseCourseSchedule(request.getCourseNumber(), request.getSchedule(),
-				request.getStartTime(), request.getEndTime());
-	}
-
-	@GetMapping(value = "revise_course_by_all")
-	public Response reviseCourseByAll(@RequestBody Request request) {
-		return courseService.reviseCourseAll(request.getCourseNumber(), request.getCourseTitle(),
-				request.getSchedule(), request.getStartTime(), request.getEndTime(), request.getCredits());
+	
+	@GetMapping(value = "revise_course")
+	public Response reviseCourse(@RequestBody Request request) {
+		return courseService.reviseCourse(request);
 	}
 	
-	@GetMapping(value = "delete_course")
+	@DeleteMapping(value = "delete_course")
 	public Response deleteCourse(@RequestBody Request request) {
 		return courseService.deleteCourse(request.getCourseNumber());
 	}
@@ -61,19 +49,9 @@ public class Controller {
 		return studentService.deleteStudent(request.getStudentID());
 	}
 	
-	@GetMapping(value = "course_schedule")
-	public Response courseSchedule(@RequestBody Request request) {
-		return studentService.courseSchedule(request.getStudentID());
-	}
-	
-	@GetMapping(value = "find_course_info_by_number")
+	@GetMapping(value = "find_course_info")
 	public Response findCourseInfoByNumber(@RequestBody Request request) {
-		return studentService.findCourseInfoByNumber(request.getCourseNumber());
-	}
-	
-	@GetMapping(value = "find_course_info_by_title")
-	public Response findCourseInfoByTitle(@RequestBody Request request) {
-		return studentService.findCourseInfoByTitle(request.getCourseTitle());
+		return studentService.findCourseInfo(request);
 	}
 	
 	@GetMapping(value = "select_course")
@@ -84,6 +62,11 @@ public class Controller {
 	@GetMapping(value = "withdraw_course")
 	public Response withdrawCourse(@RequestBody Request request) {
 		return courseSelection.withdrawCourse(request.getStudentID(), request.getCourseNumber());
+	}
+	
+	@GetMapping(value = "course_schedule")
+	public Response courseSchedule(@RequestBody Request request) {
+		return courseSelection.courseSchedule(request.getStudentID());
 	}
 	
 }

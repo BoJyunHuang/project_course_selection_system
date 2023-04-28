@@ -21,6 +21,7 @@ import com.example.projct_course_selection_system.repository.StudentDao;
 import com.example.projct_course_selection_system.service.ifs.CourseSelection;
 import com.example.projct_course_selection_system.service.ifs.StudentService;
 import com.example.projct_course_selection_system.vo.Response;
+import com.example.projct_course_selection_system.vo.StudentCourseTable;
 
 @Service
 public class CourseSelectionImpl implements CourseSelection {
@@ -37,6 +38,7 @@ public class CourseSelectionImpl implements CourseSelection {
 		if (!StringUtils.hasText(studentID) || CollectionUtils.isEmpty(courseList)) {
 			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
 		}
+
 		// 1-1.查詢學生是否存在
 		Optional<Student> resStudent = studentDao.findById(studentID);
 		if (!resStudent.isPresent()) {
@@ -47,33 +49,21 @@ public class CourseSelectionImpl implements CourseSelection {
 		if (CollectionUtils.isEmpty(resCourse)) {
 			return new Response(RtnCode.NOT_FOUND.getMessage());
 		}
-		for (Course rC : resCourse) {
-			// 1-2-1.確認修課人數
-			if (rC.getPersonlimit() == 0) {
-				return new Response(RtnCode.FULLY_SELECTED.getMessage());
-			}
-			// 1-2-2.選課名單中不能撞名與互相衝堂
-			for (Course rCclone : resCourse) {
-				if (!rC.getCourseNumber().equals(rCclone.getCourseNumber())) {
-					if (rC.getCourseTitle().equals(rCclone.getCourseTitle())) {
-						return new Response(RtnCode.ALREADY_EXISTED.getMessage());
-					}
-					if (rC.getSchedule().equals(rCclone.getSchedule())) {
-						if (rC.getStartTime().isBefore(rCclone.getEndTime())
-								|| rCclone.getEndTime().isAfter(rCclone.getStartTime())) {
-							return new Response(RtnCode.INCORRECT.getMessage());
-						}
-					}
-				}
-			}
+
+		// 2.1檢查欲選課程可選與衝突偶與否
+		Response courseCheck = selectCourseCheck(resCourse);
+		if (!courseCheck.getMessage().equals(RtnCode.SUCCESSFUL.getMessage())) {
+			return new Response(RtnCode.CONFLICT.getMessage());
 		}
-		// 2-1.確認學分數是否足夠
+
+		// 2-2.計算欲選課程總學分
+		// 找出學生的修課表
+		List<Course> allCourse = courseDao.findAll();
+		List<Course> selectedCourses = new ArrayList<>();
 		int expectCredits = 0;
 		for (Course rC : resCourse) {
 			expectCredits += rC.getCredits();
 		}
-		List<Course> allCourse = courseDao.findAll();
-		List<Course> selectedCourses = new ArrayList<>();
 		if (StringUtils.hasText(resStudent.get().getCourseNumber())) {
 			// 確認學生學分數狀態
 			if (resStudent.get().getCreditsLimit() < expectCredits) {
@@ -158,6 +148,80 @@ public class CourseSelectionImpl implements CourseSelection {
 		courseDao.save(resCourse.get());
 		studentDao.save(resStudent.get());
 		return new Response(RtnCode.SUCCESSFUL.getMessage());
+	}
+
+	@Override
+	public Response courseSchedule(String studentID) {
+		// 0.防呆:輸入參數空、白
+		if (!StringUtils.hasText(studentID)) {
+			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
+		}
+		// 1.確認學員是否存在
+		Optional<Student> res = studentDao.findById(studentID);
+		if (!res.isPresent()) {
+			return new Response(RtnCode.NOT_FOUND.getMessage());
+		}
+		// 2.判斷學生課表是否存在
+		if (!StringUtils.hasText(res.get().getCourseNumber())) {
+			return new Response(RtnCode.NOT_FOUND.getMessage());
+		}
+		// 3.取得課表
+		List<StudentCourseTable> studentCourseList = studentDao.findStudentCourseList(studentID);
+		List<Course> selectedCourses = new ArrayList<>();
+		for (StudentCourseTable sCL : studentCourseList) {
+			Course courseElement = new Course(sCL.getCourseNumber(), sCL.getCourseTitle(), sCL.getSchedule(),
+					sCL.getStartTime(), sCL.getEndTime(), sCL.getCredits());
+			courseElement.setPersonlimit(sCL.getPersonlimit());
+			selectedCourses.add(courseElement);
+			Student student = new Student(sCL.getStudentID(), sCL.getName(),sCL.getCourseNumber());
+			student.setCreditsLimit(sCL.getCreditsLimit());
+		}
+		return new Response(res.get(), selectedCourses, RtnCode.SUCCESS.getMessage());
+	}
+
+	// 檢查課程是否可選或重複
+	private Response selectCourseCheck(List<Course> resCourse) {
+		for (Course rC : resCourse) {
+			// 1.確認修課人數，排除:選課人數已滿
+			if (rC.getPersonlimit() == 0) {
+				return new Response(RtnCode.FULLY_SELECTED.getMessage());
+			}
+			// 2.選課名單中不能撞名與互相衝堂
+			for (Course rCclone : resCourse) {
+				// 因比較相同list，固唯一屬性課號相同時，便跳過
+				if (!rC.getCourseNumber().equals(rCclone.getCourseNumber())) {
+					// 排除:不同課號但相同課名
+					if (rC.getCourseTitle().equals(rCclone.getCourseTitle())) {
+						return new Response(RtnCode.ALREADY_EXISTED.getMessage());
+					}
+					// 排除:上課日期相同且時間相同或衝堂
+					if (rC.getSchedule().equals(rCclone.getSchedule())) {
+						if (rC.getStartTime().isBefore(rCclone.getEndTime())
+								|| rCclone.getEndTime().isAfter(rCclone.getStartTime())) {
+							return new Response(RtnCode.CONFLICT.getMessage());
+						}
+					}
+				}
+			}
+		}
+		return new Response(RtnCode.SUCCESSFUL.getMessage());
+	}
+	
+	//將findStudentCourseList()方法中資訊轉換成List<Course>
+	private List<Course> organizeData(List<StudentCourseTable> allData) {
+		// 宣告輸出陣列
+		List<Course> selectedCourses = new ArrayList<>();
+		// 梳理資料
+		for (StudentCourseTable aD : allData) {
+			// 建立Course並存到陣列中
+			Course courseElement = new Course(aD.getCourseNumber(), aD.getCourseTitle(), aD.getSchedule(),
+					aD.getStartTime(), aD.getEndTime(), aD.getCredits());
+			courseElement.setPersonlimit(aD.getPersonlimit());
+			selectedCourses.add(courseElement);
+			Student student = new Student(aD.getStudentID(), aD.getName(),aD.getCourseNumber());
+			student.setCreditsLimit(aD.getCreditsLimit());
+		}
+		return null;
 	}
 
 }
