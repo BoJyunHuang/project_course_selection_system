@@ -7,6 +7,7 @@ import com.example.projct_course_selection_system.entity.Student;
 
 public class Response {
 
+	private int expectCredits;
 	private String message;
 	private Course course;
 	private Student student;
@@ -18,6 +19,12 @@ public class Response {
 
 	public Response(String message) {
 		super();
+		this.message = message;
+	}
+
+	public Response(int expectCredits, String message) {
+		super();
+		this.expectCredits = expectCredits;
 		this.message = message;
 	}
 
@@ -39,11 +46,25 @@ public class Response {
 		this.message = message;
 	}
 
+	public Response(Student student, List<Course> courseList) {
+		super();
+		this.student = student;
+		this.courseList = courseList;
+	}
+
 	public Response(Student student, List<Course> courseList, String message) {
 		super();
 		this.student = student;
 		this.courseList = courseList;
 		this.message = message;
+	}
+
+	public int getExpectCredits() {
+		return expectCredits;
+	}
+
+	public void setExpectCredits(int expectCredits) {
+		this.expectCredits = expectCredits;
 	}
 
 	public String getMessage() {

@@ -16,4 +16,7 @@ public interface CourseService {
 
 	// 3.刪除課程 (必須無人選修)
 	public Response deleteCourse(String courseNumber);
+
+	// 4.搜尋課程
+	public Response findCourseInfo(Request request);
 }

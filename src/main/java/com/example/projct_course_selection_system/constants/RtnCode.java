@@ -7,6 +7,7 @@ public enum RtnCode {
 	CANNOT_EMPTY("400","Input is empty!"),
 	INCORRECT("401"," Incorrect requests!"),
 	CONFLICT("401"," Request conflicts!"),
+	OUT_OF_LIMIT("401"," Out of limit!"),
 	TEST1_ERROR("401"," Test1 is error!"),
 	TEST2_ERROR("401"," Test2 is error!"),
 	TEST3_ERROR("401"," Test3 is error!"),

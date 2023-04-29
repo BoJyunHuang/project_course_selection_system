@@ -27,7 +27,7 @@ import com.example.projct_course_selection_system.vo.Response;
 
 @SpringBootTest(classes = ProjectCourseSelectionApplication.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) // 為了可以使用@BeforeAll和@AfterAll
-class StudentServiceTests {
+public class StudentServiceTests {
 
 	@Autowired
 	private StudentService sSer;
@@ -35,113 +35,88 @@ class StudentServiceTests {
 	@Autowired
 	private StudentDao sDao;
 
-	@BeforeAll
-	public void beforeAll() {
-		// 最初執行，建立假資料
-		Student newData = resetData();
-		sDao.save(newData);
+	@BeforeEach
+	public void beforeEach() {
+		// 各單元執行前執行，預設資料內容
+		Student student = newStudentData();
+		sDao.save(student);
 	}
 
 	@AfterAll
 	public void afterAll() {
 		// 最後執行，刪除假資料
-		Request r = newStudentData();
-		sDao.deleteById(r.getStudentID());
+		Student student = newStudentData();
+		sDao.deleteById(student.getStudentID());
 	}
-
-	@AfterEach
-	public void afterEach() { 
-		// 各單元執行後執行，恢復預設資料內容
-		Student newData = resetData();
-		sDao.save(newData);
-	}
-	
-	@Test
-	public void findStudentCoursesByCourseListTest() {
-		
-	}
-	
 
 	@Test
 	public void addStudentEmptyTest() {
 		// 帶入生成資料
-		Request r = newStudentData();
+		Student s = newStudentData();
 		// 狀況:學生Id為空
-		r.setStudentID(null);
-		Response res1 = sSer.addStudent(r.getStudentID(), r.getStudentName());
+		s.setStudentID(null);
+		Response res1 = sSer.addStudent(s.getStudentID(), s.getName());
 		Assert.isTrue(res1.getMessage().equals(RtnCode.CANNOT_EMPTY.getMessage()), RtnCode.TEST1_ERROR.getMessage());
 		// 狀況:學生姓名為空
-		r.setStudentName("");
-		Response res2 = sSer.addStudent(r.getStudentID(), r.getStudentName());
+		s.setName("");
+		Response res2 = sSer.addStudent(s.getStudentID(), s.getName());
 		Assert.isTrue(res2.getMessage().equals(RtnCode.CANNOT_EMPTY.getMessage()), RtnCode.TEST2_ERROR.getMessage());
 	}
 
 	@Test
 	public void addStudentAlreadyExistTest() {
 		// 帶入生成資料
-		Request r = newStudentData();
+		Student s = newStudentData();
 		// 狀況:已存在學生
-		Response res1 = sSer.addStudent(r.getStudentID(), r.getStudentName());
+		Response res1 = sSer.addStudent(s.getStudentID(), s.getName());
 		Assert.isTrue(res1.getMessage().equals(RtnCode.ALREADY_EXISTED.getMessage()), RtnCode.TEST1_ERROR.getMessage());
 	}
-	
+
 	@Test
 	public void addStudentSuccessTest() {
 		// 帶入生成資料
-		Request r = newStudentData();
+		Student s = newStudentData();
 		// 狀況:新增資料
-		r.setStudentID("TXX1");
-		Response res1 = sSer.addStudent(r.getStudentID(), r.getStudentName());
+		s.setStudentID("TXXX1");
+		Response res1 = sSer.addStudent(s.getStudentID(), s.getName());
 		Assert.isTrue(res1.getMessage().equals(RtnCode.SUCCESS.getMessage()), RtnCode.TEST1_ERROR.getMessage());
-		sDao.deleteById("TXX1");
+		sDao.deleteById("TXXX1");
 	}
-	
+
 	@Test
 	public void deleteStudentEmptyTest() {
 		// 帶入生成資料
-		Request r = newStudentData();
+		Student s = newStudentData();
 		// 狀況:學生Id為空
-		r.setStudentID(null);
-		Response res1 = sSer.deleteStudent(r.getStudentID());
+		s.setStudentID(null);
+		Response res1 = sSer.deleteStudent(s.getStudentID());
 		Assert.isTrue(res1.getMessage().equals(RtnCode.CANNOT_EMPTY.getMessage()), RtnCode.TEST1_ERROR.getMessage());
 	}
 
 	@Test
 	public void deleteStudentNotFoundTest() {
 		// 帶入生成資料
-		Request r = newStudentData();
+		Student s = newStudentData();
 		// 狀況:不存在學生
-		r.setStudentID("TXX2");
-		Response res1 = sSer.deleteStudent(r.getStudentID());
+		s.setStudentID("TXXX2");
+		Response res1 = sSer.deleteStudent(s.getStudentID());
 		Assert.isTrue(res1.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST1_ERROR.getMessage());
 	}
-	
+
 	@Test
 	public void deleteStudentSuccessTest() {
 		// 帶入生成資料
-		Request r = newStudentData();
-		// 狀況:新增資料
-		Response res1 = sSer.deleteStudent(r.getStudentID());
+		Student s = newStudentData();
+		// 狀況:刪除成功
+		s.setStudentID("TXXX1");
+		sDao.save(s);
+		Response res1 = sSer.deleteStudent(s.getStudentID());
 		Assert.isTrue(res1.getMessage().equals(RtnCode.SUCCESSFUL.getMessage()), RtnCode.TEST1_ERROR.getMessage());
 	}
 
-	private Request newStudentData() {
+	private Student newStudentData() {
 		// 生成測試資料
-		Request request = new Request();
-		request.setStudentID("TXXXX");
-		request.setStudentName("Test");
-		return request;
-	}
-
-	private Student resetData() {
-		Request r = newStudentData();
-		Student student = new Student(r.getStudentID(), r.getStudentName());
+		Student student = new Student("TXXXX", "Test");
 		return student;
 	}
-
-//	@BeforeEach
-//	public void beforeEach() { // 各單元執行前執行
-//		System.out.println("===== before_each ====");
-//	}
-
 }

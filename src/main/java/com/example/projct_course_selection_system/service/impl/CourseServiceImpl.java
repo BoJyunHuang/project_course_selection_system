@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.example.projct_course_selection_system.constants.RtnCode;
@@ -165,5 +166,37 @@ public class CourseServiceImpl implements CourseService {
 		// 3.刪除課程
 		courseDao.delete(res.get());
 		return new Response(RtnCode.SUCCESSFUL.getMessage());
+	}
+
+	@Override
+	public Response findCourseInfo(Request request) {
+		// 0-1.防呆:輸入參數空、白
+		if (!StringUtils.hasText(request.getCourseNumber()) && !StringUtils.hasText(request.getCourseTitle())) {
+			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
+		}
+		// 0-1.防呆:重複輸入
+		if (StringUtils.hasText(request.getCourseNumber()) && StringUtils.hasText(request.getCourseTitle())) {
+			return new Response(RtnCode.REPEAT.getMessage());
+		}
+
+		// 1.用courseNumber搜尋
+		if (StringUtils.hasText(request.getCourseNumber())) {
+			// 尋找資料
+			Optional<Course> res = courseDao.findById(request.getCourseNumber());
+			if (!res.isPresent()) {
+				return new Response(RtnCode.NOT_FOUND.getMessage());
+			}
+			// 印出資料
+			return new Response(res.get(), RtnCode.SUCCESS.getMessage());
+		}
+
+		// 2.用courseTitle搜尋
+		// 尋找資料
+		List<Course> res = courseDao.findByCourseTitle(request.getCourseTitle());
+		if (CollectionUtils.isEmpty(res)) {
+			return new Response(RtnCode.NOT_FOUND.getMessage());
+		}
+		// 印出資料
+		return new Response(res, RtnCode.SUCCESS.getMessage());
 	}
 }

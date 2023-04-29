@@ -39,76 +39,62 @@ public class CourseSelectionImpl implements CourseSelection {
 			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
 		}
 
-		// 1-1.查詢學生是否存在
-		Optional<Student> resStudent = studentDao.findById(studentID);
-		if (!resStudent.isPresent()) {
+		// 1-1.查詢欲查學生是否存在
+		boolean isInStudentDB = studentDao.existsById(studentID);
+		if (!isInStudentDB) {
 			return new Response(RtnCode.NOT_FOUND.getMessage());
 		}
-		// 1-2.確認課程存在
-		List<Course> resCourse = courseDao.findAllById(courseList);
-		if (CollectionUtils.isEmpty(resCourse)) {
+		// 1-2.確認欲選課程存在
+		List<Course> selectCourses = courseDao.findAllById(courseList);
+		if (CollectionUtils.isEmpty(selectCourses)) {
 			return new Response(RtnCode.NOT_FOUND.getMessage());
 		}
-
-		// 2.1檢查欲選課程可選與衝突偶與否
-		Response courseCheck = selectCourseCheck(resCourse);
-		if (!courseCheck.getMessage().equals(RtnCode.SUCCESSFUL.getMessage())) {
-			return new Response(RtnCode.CONFLICT.getMessage());
+		// 1.3檢查欲選課程可選、衝突與否
+		Response conflictCheck = selectCourseCheck(selectCourses);
+		if (!conflictCheck.getMessage().equals(RtnCode.SUCCESSFUL.getMessage())) {
+			return conflictCheck;
 		}
 
-		// 2-2.計算欲選課程總學分
-		// 找出學生的修課表
-		List<Course> allCourse = courseDao.findAll();
-		List<Course> selectedCourses = new ArrayList<>();
-		int expectCredits = 0;
-		for (Course rC : resCourse) {
-			expectCredits += rC.getCredits();
-		}
-		if (StringUtils.hasText(resStudent.get().getCourseNumber())) {
-			// 確認學生學分數狀態
-			if (resStudent.get().getCreditsLimit() < expectCredits) {
-				return new Response(RtnCode.INCORRECT.getMessage());
-			}
-			// 紀錄已選取學分
-			for (Course c : allCourse) {
-				if (resStudent.get().getCourseNumber().contains(c.getCourseNumber())) {
-					selectedCourses.add(c);
-				}
-			}
-			// 2-2.避免重複學程(包含課名)，比對新課程是否衝堂
-			for (Course sC : selectedCourses) {
-				for (Course rC : resCourse) {
-					if (sC.getCourseNumber().equals(rC.getCourseNumber())
-							|| sC.getCourseTitle().equals(rC.getCourseTitle())) {
-						return new Response(RtnCode.ALREADY_EXISTED.getMessage());
-					}
-					if (rC.getSchedule().equals(sC.getSchedule())) {
-						if (rC.getStartTime().isBefore(sC.getEndTime()) || rC.getEndTime().isAfter(sC.getStartTime())) {
-							return new Response(RtnCode.INCORRECT.getMessage());
-						}
-					}
-				}
+		// 2-1.找出學生的修課表
+		Response studentCourseTable = courseSchedule(studentID);
+		if (studentCourseTable.getMessage().equals(RtnCode.SUCCESS.getMessage())) {
+			// 2-2.檢查欲選課程與學生已選課程是否學分數超過、重複、衝堂
+			Response checkResult = CoursesCheck(selectCourses, studentCourseTable);
+			if (!checkResult.getMessage().equals(RtnCode.SUCCESSFUL.getMessage())) {
+				return checkResult;
 			}
 		}
-		// 3-2.設定學生狀態
+
+		// 3-1.紀錄欲選課程，並修改修課人數
 		List<String> getNewCourseNumber = new ArrayList<>();
-		if (!CollectionUtils.isEmpty(selectedCourses)) {
-			for (Course sC : selectedCourses) {
-				getNewCourseNumber.add(sC.getCourseNumber());
-			}
-		}
-		// 紀錄課程狀態
-		for (Course rC : resCourse) {
+		List<String> oldCourseNumber = new ArrayList<>();
+		for (Course rC : selectCourses) {
 			getNewCourseNumber.add(rC.getCourseNumber());
 			rC.setPersonlimit(rC.getPersonlimit() - 1);
 		}
+		// 3-2.修改學生修課列表
 		String newCouresList = String.join(", ", getNewCourseNumber);
-		newCouresList = "{" + newCouresList + "}";
-		resStudent.get().setCreditsLimit(resStudent.get().getCreditsLimit() - expectCredits);
-		resStudent.get().setCourseNumber(newCouresList);
+		if (!CollectionUtils.isEmpty(studentCourseTable.getCourseList())) {
+			for (Course e : studentCourseTable.getCourseList()) {
+				oldCourseNumber.add(e.getCourseNumber());
+			}
+			newCouresList = String.join(", ", oldCourseNumber);
+		}
+		newCouresList = "[" + newCouresList + "]";
+
+		// 計算欲選課程總學分
+		int expectCredits = 0;
+		for (Course sC : selectCourses) {
+			expectCredits += sC.getCredits();
+		}
+		// 3-3.更新學生學分狀態與修課列表
+		studentCourseTable.getStudent()
+				.setCreditsLimit(studentCourseTable.getStudent().getCreditsLimit() - expectCredits);
+		studentCourseTable.getStudent().setCourseNumber(newCouresList);
+
 		// 4.選課結束，儲存
-		studentDao.save(resStudent.get());
-		courseDao.saveAll(resCourse);
+		studentDao.save(studentCourseTable.getStudent());
+		courseDao.saveAll(selectCourses);
 		return new Response(RtnCode.SUCCESSFUL.getMessage());
 	}
 
@@ -118,6 +104,7 @@ public class CourseSelectionImpl implements CourseSelection {
 		if (!StringUtils.hasText(studentID) || !StringUtils.hasText(courseNumber)) {
 			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
 		}
+
 		// 1-1.查詢學生
 		Optional<Student> resStudent = studentDao.findById(studentID);
 		if (!resStudent.isPresent()) {
@@ -132,6 +119,7 @@ public class CourseSelectionImpl implements CourseSelection {
 		if (!resStudent.get().getCourseNumber().contains(courseNumber)) {
 			return new Response(RtnCode.NOT_FOUND.getMessage());
 		}
+
 		// 2-1.取出課程
 		String[] courseEle = resStudent.get().getCourseNumber().replaceAll("[{}\"]", "").split(", ");
 		List<String> courseList = Arrays.stream(courseEle).collect(Collectors.toList());
@@ -144,6 +132,7 @@ public class CourseSelectionImpl implements CourseSelection {
 		// 2-4.修改學生狀態，恢復學生學分上限 與 修習課程
 		resStudent.get().setCreditsLimit(resStudent.get().getCreditsLimit() + resCourse.get().getCredits());
 		resStudent.get().setCourseNumber(newCouresList);
+
 		// 3.退選，存回資料庫
 		courseDao.save(resCourse.get());
 		studentDao.save(resStudent.get());
@@ -156,37 +145,32 @@ public class CourseSelectionImpl implements CourseSelection {
 		if (!StringUtils.hasText(studentID)) {
 			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
 		}
+
 		// 1.確認學員是否存在
-		Optional<Student> res = studentDao.findById(studentID);
-		if (!res.isPresent()) {
+		boolean res = studentDao.existsById(studentID);
+		if (!res) {
 			return new Response(RtnCode.NOT_FOUND.getMessage());
 		}
-		// 2.判斷學生課表是否存在
-		if (!StringUtils.hasText(res.get().getCourseNumber())) {
-			return new Response(RtnCode.NOT_FOUND.getMessage());
-		}
-		// 3.取得課表
+
+		// 2.取得課表
 		List<StudentCourseTable> studentCourseList = studentDao.findStudentCourseList(studentID);
-		List<Course> selectedCourses = new ArrayList<>();
-		for (StudentCourseTable sCL : studentCourseList) {
-			Course courseElement = new Course(sCL.getCourseNumber(), sCL.getCourseTitle(), sCL.getSchedule(),
-					sCL.getStartTime(), sCL.getEndTime(), sCL.getCredits());
-			courseElement.setPersonlimit(sCL.getPersonlimit());
-			selectedCourses.add(courseElement);
-			Student student = new Student(sCL.getStudentID(), sCL.getName(),sCL.getCourseNumber());
-			student.setCreditsLimit(sCL.getCreditsLimit());
+		if (CollectionUtils.isEmpty(studentCourseList)) {
+			return new Response(RtnCode.NOT_FOUND.getMessage());
 		}
-		return new Response(res.get(), selectedCourses, RtnCode.SUCCESS.getMessage());
+
+		// 3.整理資料
+		Response courseTable = organizeData(studentCourseList);
+		return new Response(courseTable.getStudent(), courseTable.getCourseList(), RtnCode.SUCCESS.getMessage());
 	}
 
-	// 檢查課程是否可選或重複
+	// 檢查欲選課程是否可選或重複
 	private Response selectCourseCheck(List<Course> resCourse) {
 		for (Course rC : resCourse) {
-			// 1.確認修課人數，排除:選課人數已滿
+			// 確認修課人數，排除:選課人數已滿
 			if (rC.getPersonlimit() == 0) {
 				return new Response(RtnCode.FULLY_SELECTED.getMessage());
 			}
-			// 2.選課名單中不能撞名與互相衝堂
+			// 選課名單中不能撞名與互相衝堂
 			for (Course rCclone : resCourse) {
 				// 因比較相同list，固唯一屬性課號相同時，便跳過
 				if (!rC.getCourseNumber().equals(rCclone.getCourseNumber())) {
@@ -206,11 +190,50 @@ public class CourseSelectionImpl implements CourseSelection {
 		}
 		return new Response(RtnCode.SUCCESSFUL.getMessage());
 	}
-	
-	//將findStudentCourseList()方法中資訊轉換成List<Course>
-	private List<Course> organizeData(List<StudentCourseTable> allData) {
-		// 宣告輸出陣列
+
+	// 檢查欲選課程與學生已選課程是否學分數超過、重複、衝堂
+	private Response CoursesCheck(List<Course> selectCourses, Response studentCourseTable) {
+		// 計算欲選課程總學分
+		int expectCredits = 0;
+		for (Course sC : selectCourses) {
+			expectCredits += sC.getCredits();
+		}
+		// 排除:學分超過上限
+		if (expectCredits > 10) {
+			return new Response(RtnCode.OUT_OF_LIMIT.getMessage());
+		}
+		// 取出學生與課程資料
+		Student thisStudent = studentCourseTable.getStudent();
+		List<Course> alreadyHaveCoures = studentCourseTable.getCourseList();
+		// 排除:選修分數超過學生剩餘學分
+		if (expectCredits > thisStudent.getCreditsLimit()) {
+			return new Response(RtnCode.OUT_OF_LIMIT.getMessage());
+		}
+		// 排除；已選、相同課名、衝堂
+		for (Course sC : alreadyHaveCoures) {
+			for (Course rC : selectCourses) {
+				if (sC.getCourseNumber().equals(rC.getCourseNumber())
+						|| sC.getCourseTitle().equals(rC.getCourseTitle())) {
+					return new Response(RtnCode.ALREADY_EXISTED.getMessage());
+				}
+				if (rC.getSchedule().equals(sC.getSchedule())) {
+					if (rC.getStartTime().isBefore(sC.getEndTime()) || rC.getEndTime().isAfter(sC.getStartTime())) {
+						return new Response(RtnCode.INCORRECT.getMessage());
+					}
+
+				}
+			}
+		}
+		return new Response(expectCredits, RtnCode.SUCCESSFUL.getMessage());
+	}
+
+	// 將findStudentCourseList()方法中資訊轉換成List<Course>
+	private Response organizeData(List<StudentCourseTable> allData) {
+		// 宣告輸出陣列，與學生
 		List<Course> selectedCourses = new ArrayList<>();
+		// 儲存學生個人資訊
+		Student student = new Student(allData.get(0).getStudentID(), allData.get(0).getName());
+		student.setCreditsLimit(allData.get(0).getCreditsLimit());
 		// 梳理資料
 		for (StudentCourseTable aD : allData) {
 			// 建立Course並存到陣列中
@@ -218,10 +241,9 @@ public class CourseSelectionImpl implements CourseSelection {
 					aD.getStartTime(), aD.getEndTime(), aD.getCredits());
 			courseElement.setPersonlimit(aD.getPersonlimit());
 			selectedCourses.add(courseElement);
-			Student student = new Student(aD.getStudentID(), aD.getName(),aD.getCourseNumber());
-			student.setCreditsLimit(aD.getCreditsLimit());
 		}
-		return null;
+		// 回傳整理後的資料
+		return new Response(student, selectedCourses);
 	}
 
 }

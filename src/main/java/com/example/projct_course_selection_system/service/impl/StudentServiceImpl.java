@@ -26,9 +26,6 @@ public class StudentServiceImpl implements StudentService {
 	private StudentDao studentDao;
 
 	@Autowired
-	private CourseDao courseDao;
-
-	@Autowired
 	private CourseSelection courseSelection;
 
 	@Override
@@ -38,7 +35,7 @@ public class StudentServiceImpl implements StudentService {
 			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
 		}
 		// 1.檢查重複:確認有無重複學員
-		 boolean res = studentDao.existsById(studentID);
+		boolean res = studentDao.existsById(studentID);
 		if (res) {
 			return new Response(RtnCode.ALREADY_EXISTED.getMessage());
 		}
@@ -74,35 +71,4 @@ public class StudentServiceImpl implements StudentService {
 		return new Response(RtnCode.SUCCESSFUL.getMessage());
 	}
 
-	@Override
-	public Response findCourseInfo(Request request) {
-		// 0-1.防呆:輸入參數空、白
-		if (!StringUtils.hasText(request.getCourseNumber()) && !StringUtils.hasText(request.getCourseTitle())) {
-			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
-		}
-		// 0-1.防呆:重複輸入
-		if (StringUtils.hasText(request.getCourseNumber()) && StringUtils.hasText(request.getCourseTitle())) {
-			return new Response(RtnCode.REPEAT.getMessage());
-		}
-
-		// 1.用courseNumber搜尋
-		if (StringUtils.hasText(request.getCourseNumber())) {
-			// 尋找資料
-			Optional<Course> res = courseDao.findById(request.getCourseNumber());
-			if (!res.isPresent()) {
-				return new Response(RtnCode.NOT_FOUND.getMessage());
-			}
-			// 印出資料
-			return new Response(res.get(), RtnCode.SUCCESS.getMessage());
-		}
-
-		// 2.用courseTitle搜尋
-		// 尋找資料
-		List<Course> res = courseDao.findByCourseTitle(request.getCourseTitle());
-		if (CollectionUtils.isEmpty(res)) {
-			return new Response(RtnCode.NOT_FOUND.getMessage());
-		}
-		// 印出資料
-		return new Response(res, RtnCode.SUCCESS.getMessage());
-	}
 }

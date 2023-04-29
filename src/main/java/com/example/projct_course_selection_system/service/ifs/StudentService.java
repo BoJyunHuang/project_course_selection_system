@@ -14,6 +14,5 @@ public interface StudentService {
 	// 2.退學 (必須先全部退選)
 	public Response deleteStudent(String studentID);
 	
-	// 3.搜尋課程
-	public Response findCourseInfo(Request request);
+	
 }
