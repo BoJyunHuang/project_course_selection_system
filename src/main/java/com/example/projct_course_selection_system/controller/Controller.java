@@ -59,9 +59,9 @@ public class Controller {
 		return courseSelection.selectCourse(request.getStudentID(), request.getCourseList());
 	}
 	
-	@GetMapping(value = "withdraw_course")
-	public Response withdrawCourse(@RequestBody Request request) {
-		return courseSelection.withdrawCourse(request.getStudentID(), request.getCourseNumber());
+	@GetMapping(value = "drop_course")
+	public Response dropCourse(@RequestBody Request request) {
+		return courseSelection.dropCourse(request.getStudentID(), request.getCourseNumber());
 	}
 	
 	@GetMapping(value = "course_schedule")

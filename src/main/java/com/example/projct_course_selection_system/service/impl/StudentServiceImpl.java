@@ -49,9 +49,9 @@ public class StudentServiceImpl implements StudentService {
 		if (StringUtils.hasText(res.get().getCourseNumbers())) {
 			String[] listOfSelectedCourse = res.get().getCourseNumbers().split(", ");
 			for (String c : listOfSelectedCourse) {
-				if (!courseSelection.withdrawCourse(studentID, c).getMessage()
+				if (!courseSelection.dropCourse(studentID, c).getMessage()
 						.equals(RtnCode.SUCCESSFUL.getMessage())) {
-					return courseSelection.withdrawCourse(studentID, c);
+					return courseSelection.dropCourse(studentID, c);
 				}
 			}
 		}

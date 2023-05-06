@@ -79,6 +79,16 @@ public class CourseTests {
 	}
 	
 	@Test
+	public void searchByNumberOrTitleTest() {
+		// 狀況:空查詢
+		List<Course> res1 = cDao.searchByNumberOrTitle("", null);
+		Assert.isTrue(res1.size() == 0, RtnCode.TEST1_ERROR.getMessage());
+		// 狀況:查詢成功
+		List<Course> res2 = cDao.searchByNumberOrTitle("TXXX", "TestCourse");
+		Assert.isTrue(res2.size() == 1, RtnCode.TEST2_ERROR.getMessage());
+	}
+	
+	@Test
 	public void reviseCoursePersonTest() {
 		// 狀況:無此課程
 		int res1 = cDao.reviseCoursePerson("TXX1", 2);
@@ -98,15 +108,15 @@ public class CourseTests {
 		Assert.isTrue(res2.getMessage().equals(RtnCode.CANNOT_EMPTY.getMessage()), RtnCode.TEST2_ERROR.getMessage());
 		// 狀況:日期在假日
 		Response res3 = cSer.addCourse("TXX1", "TestCourse", "Sunday", LocalTime.of(9, 0), LocalTime.of(11, 0), 2);
-		Assert.isTrue(res3.getMessage().equals(RtnCode.PATTERNISNOTMATCH.getMessage()),
+		Assert.isTrue(res3.getMessage().equals(RtnCode.PATTERN_IS_NOT_MATCH.getMessage()),
 				RtnCode.TEST3_ERROR.getMessage());
 		// 狀況:時間過早
 		Response res4 = cSer.addCourse("TXX1", "TestCourse", "Monday", LocalTime.of(7, 0), LocalTime.of(11, 0), 2);
-		Assert.isTrue(res4.getMessage().equals(RtnCode.PATTERNISNOTMATCH.getMessage()),
+		Assert.isTrue(res4.getMessage().equals(RtnCode.PATTERN_IS_NOT_MATCH.getMessage()),
 				RtnCode.TEST4_ERROR.getMessage());
 		// 狀況:學分為0
 		Response res5 = cSer.addCourse("TXX1", "TestCourse", "Monday", LocalTime.of(9, 0), LocalTime.of(11, 0), 0);
-		Assert.isTrue(res5.getMessage().equals(RtnCode.PATTERNISNOTMATCH.getMessage()),
+		Assert.isTrue(res5.getMessage().equals(RtnCode.PATTERN_IS_NOT_MATCH.getMessage()),
 				RtnCode.TEST5_ERROR.getMessage());
 		// 狀況:儲存成功
 		Response res6 = cSer.addCourse("TXX1", "TestCourse", "Monday", LocalTime.of(9, 0), LocalTime.of(11, 0), 2);
@@ -158,13 +168,13 @@ public class CourseTests {
 		r.setCourseNumber("TXXX");
 		r.setSchedule("Sunday");
 		Response res1 = cSer.reviseCourse(r);
-		Assert.isTrue(res1.getMessage().equals(RtnCode.PATTERNISNOTMATCH.getMessage()),	RtnCode.TEST1_ERROR.getMessage());
+		Assert.isTrue(res1.getMessage().equals(RtnCode.PATTERN_IS_NOT_MATCH.getMessage()),	RtnCode.TEST1_ERROR.getMessage());
 		r.setSchedule(null);
 		// 狀況:時間為半夜
 		r.setStartTime(LocalTime.of(20, 0));
 		r.setEndTime(LocalTime.of(21, 0));
 		Response res2 = cSer.reviseCourse(r);
-		Assert.isTrue(res2.getMessage().equals(RtnCode.PATTERNISNOTMATCH.getMessage()), RtnCode.TEST2_ERROR.getMessage());
+		Assert.isTrue(res2.getMessage().equals(RtnCode.PATTERN_IS_NOT_MATCH.getMessage()), RtnCode.TEST2_ERROR.getMessage());
 		r.setStartTime(null);
 		r.setEndTime(null);
 		// 狀況:空資料
@@ -196,7 +206,6 @@ public class CourseTests {
 		r.setCourseNumber("TXX1");
 		Response res1 = cSer.findCourseInfo(r);
 		Assert.isTrue(res1.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST1_ERROR.getMessage());
-		r.setCourseNumber(null);
 		// 狀況:輸入不存在課程名稱
 		r.setCourseTitle("Test2");
 		Response res2 = cSer.findCourseInfo(r);

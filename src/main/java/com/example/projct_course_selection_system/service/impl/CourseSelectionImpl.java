@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,35 +89,33 @@ public class CourseSelectionImpl implements CourseSelection {
 			return new Response(RtnCode.OUT_OF_LIMIT.getMessage());
 		}
 
-		// 3-1.修改已選課學生修課列表
+		// 3.修改學生修課列表
 		List<String> getNewCourseNumber = new ArrayList<>();
 		for (Course a : alreadyHaveCoures) {
 			getNewCourseNumber.add(a.getCourseNumber());
 		}
 		String newCouresList = String.join(", ", getNewCourseNumber);
-		// 3-2.更新學生學分狀態與修課列表
-		thisStudent.get().setCreditsLimit(thisStudent.get().getCreditsLimit() - expectCredits);
-		thisStudent.get().setCourseNumbers(newCouresList);
-
-		// 4.選課結束，儲存
-		studentDao.save(thisStudent.get());
-		courseDao.saveAll(selectCourses);
-		return new Response(thisStudent.get(), selectCourses, RtnCode.SUCCESS.getMessage());
+		// 4.選課結束，儲存資訊
+		return (studentDao.reviseStudentCredits(thisStudent.get().getStudentID(), newCouresList,
+				thisStudent.get().getCreditsLimit() - expectCredits) == 1
+				&& !courseDao.saveAll(selectCourses).isEmpty()) ? new Response(RtnCode.SUCCESSFUL.getMessage())
+						: new Response(RtnCode.INCORRECT.getMessage());
 	}
 
 	@Override
-	public Response withdrawCourse(String studentID, String courseNumber) {
+	public Response dropCourse(String studentID, String courseNumber) {
 		// 1.確認學生是否包含此課程
 		StudentCourseTable res = studentDao.findStudentCourse(studentID, courseNumber);
 		if (res == null) {
 			return new Response(RtnCode.NOT_FOUND.getMessage());
 		}
 
-		// 2-1.取出課程並刪除
+		// 2.取出課程並刪除
 		String[] courseEle = res.getCourseNumbers().split(", ");
 		List<String> courseList = Arrays.stream(courseEle).collect(Collectors.toList());
 		courseList.remove(courseNumber);
-		// 2-2.修改課程及學生狀態，恢復課程修課人數及學分
+		
+		// 3.修改課程及學生狀態，恢復課程修課人數及學分
 		return (courseDao.reviseCoursePerson(courseNumber, res.getPersonlimit() + 1) == 1
 				&& studentDao.reviseStudentCredits(studentID, String.join(", ", courseList),
 						res.getCreditsLimit() + res.getCredits()) == 1) ? new Response(RtnCode.SUCCESSFUL.getMessage())

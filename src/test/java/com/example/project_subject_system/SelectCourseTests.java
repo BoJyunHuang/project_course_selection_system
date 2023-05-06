@@ -95,7 +95,7 @@ public class SelectCourseTests {
 		Assert.isTrue(res1.getCourseNumbers().contains("CXX1"), RtnCode.TEST1_ERROR.getMessage());
 		// 無課程狀況
 		StudentCourseTable res2 = sDao.findStudentCourse("TXXX2","CXX1");
-		Assert.isTrue(res2.getCourseNumber() == null, RtnCode.TEST2_ERROR.getMessage());
+		Assert.isTrue(res2 == null, RtnCode.TEST2_ERROR.getMessage());
 	}
 
 	@Test
@@ -145,29 +145,29 @@ public class SelectCourseTests {
 		// 狀況:已存在課程
 		List<String> cList4 = new ArrayList<>(Arrays.asList("CXX5"));
 		Response res4 = cSele.selectCourse("TXXX1", cList4);
-		Assert.isTrue(res4.getStudent().getCourseNumbers().contains("CXX5"), RtnCode.TEST4_ERROR.getMessage());
+		Assert.isTrue(res4.getMessage().equals(RtnCode.SUCCESSFUL.getMessage()), RtnCode.TEST4_ERROR.getMessage());
 		// 狀況:未存在課程
 		List<String> cList5 = new ArrayList<>(Arrays.asList("CXX3", "CXX4"));
 		Response res5 = cSele.selectCourse("TXXX2", cList5);
-		Assert.isTrue(res5.getStudent().getCreditsLimit() == 4, RtnCode.TEST5_ERROR.getMessage());
+		Assert.isTrue(res5.getMessage().equals(RtnCode.SUCCESSFUL.getMessage()), RtnCode.TEST5_ERROR.getMessage());
 	}
 
 	@Test
 	public void withdrawCourseTest() {
 		// 狀況:輸入為空
-		Response res1 = cSele.withdrawCourse(null, null);
+		Response res1 = cSele.dropCourse(null, null);
 		Assert.isTrue(res1.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST1_ERROR.getMessage());
 		// 狀況:無此學生
-		Response res2 = cSele.withdrawCourse("TXXXX", "CXX1");
+		Response res2 = cSele.dropCourse("TXXXX", "CXX1");
 		Assert.isTrue(res2.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST2_ERROR.getMessage());
 		// 狀況:無此課程
-		Response res3 = cSele.withdrawCourse("TXXX1", "CXXX");
+		Response res3 = cSele.dropCourse("TXXX1", "CXXX");
 		Assert.isTrue(res3.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST3_ERROR.getMessage());
 		// 狀況:學生無此課程
-		Response res4 = cSele.withdrawCourse("TXXX1", "CXX3");
+		Response res4 = cSele.dropCourse("TXXX1", "CXX3");
 		Assert.isTrue(res4.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST4_ERROR.getMessage());
 		// 狀況:成功退課
-		Response res5 = cSele.withdrawCourse("TXXX1", "CXX1");
+		Response res5 = cSele.dropCourse("TXXX1", "CXX1");
 		Assert.isTrue(res5.getMessage().equals(RtnCode.SUCCESSFUL.getMessage()), RtnCode.TEST5_ERROR.getMessage());
 	}
 

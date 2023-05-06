@@ -18,7 +18,7 @@ public interface StudentDao extends JpaRepository<Student, String> {
 	// 新增學生
 	@Transactional
 	@Modifying
-	@Query(value = "insert into student (student_ID, name, course_number, credits_limit) select :inputID, :inputName,"
+	@Query(value = "insert into student (student_ID, name, course_numbers, credits_limit) select :inputID, :inputName,"
 			+ " null, 10 where not exists (select 1 from student where student_ID = :inputID)", nativeQuery = true)
 	public int insertStudent(@Param("inputID") String studentID, @Param("inputName") String name);
 

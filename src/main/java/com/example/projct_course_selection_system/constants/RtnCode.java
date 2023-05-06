@@ -20,7 +20,7 @@ public enum RtnCode {
 	REPEAT("409","Data is repeat!"),
 	BEEN_SELECTED("409","Course has been selected!"),
 	FULLY_SELECTED("409","Course selection is full!"),
-	PATTERNISNOTMATCH("422", "Pattern is not match!");
+	PATTERN_IS_NOT_MATCH("422", "Pattern is not match!");
 	
 	private String code;
 	private String message;

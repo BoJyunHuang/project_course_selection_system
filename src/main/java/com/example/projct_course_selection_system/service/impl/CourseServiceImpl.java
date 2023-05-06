@@ -43,15 +43,15 @@ public class CourseServiceImpl implements CourseService {
 
 		// 1-1.符合型式:日期(星期)要在工作天範圍內
 		if (!weekday.contains(schedule)) {
-			return new Response(RtnCode.PATTERNISNOTMATCH.getMessage());
+			return new Response(RtnCode.PATTERN_IS_NOT_MATCH.getMessage());
 		}
 		// 1-2.符合型式:時間要在正常上班時間且開始時間要比結束時間早
 		if (startTime.isBefore(Morning) || endTime.isAfter(Evening) || startTime.isAfter(endTime)) {
-			return new Response(RtnCode.PATTERNISNOTMATCH.getMessage());
+			return new Response(RtnCode.PATTERN_IS_NOT_MATCH.getMessage());
 		}
 		// 1-3.符合型式:學分要在1~3之間
 		if (credits < 1 || credits > 3) {
-			return new Response(RtnCode.PATTERNISNOTMATCH.getMessage());
+			return new Response(RtnCode.PATTERN_IS_NOT_MATCH.getMessage());
 		}
 
 		// 2.儲存資料並檢查重複
@@ -87,7 +87,7 @@ public class CourseServiceImpl implements CourseService {
 		if (StringUtils.hasText(request.getSchedule())) {
 			// 排除:不符合工作天
 			if (!weekday.contains(request.getSchedule())) {
-				return new Response(RtnCode.PATTERNISNOTMATCH.getMessage());
+				return new Response(RtnCode.PATTERN_IS_NOT_MATCH.getMessage());
 			}
 			// 排除:修改資訊與原資訊相同
 			if (res.get().getSchedule().equals(request.getSchedule())) {
@@ -101,7 +101,7 @@ public class CourseServiceImpl implements CourseService {
 			// 排除:時間不在正常上班時間且開始時間要比結束時間晚
 			if (request.getStartTime().isBefore(Morning) || request.getEndTime().isAfter(Evening)
 					|| request.getStartTime().isAfter(request.getEndTime())) {
-				return new Response(RtnCode.PATTERNISNOTMATCH.getMessage());
+				return new Response(RtnCode.PATTERN_IS_NOT_MATCH.getMessage());
 			}
 			// 排除:修改資訊與原資訊相同
 			if (res.get().getStartTime().equals(request.getStartTime())
@@ -130,14 +130,14 @@ public class CourseServiceImpl implements CourseService {
 	@Override
 	public Response deleteCourse(String courseNumber) {
 		// 刪除課程
-		return courseDao.deleteCourse(courseNumber) == 0 ? new Response(RtnCode.NOT_FOUND.getMessage())
+		return courseDao.deleteCourse(courseNumber) == 0 ? new Response(RtnCode.INCORRECT.getMessage())
 				: new Response(RtnCode.SUCCESSFUL.getMessage());
 	}
 
 	@Override
 	public Response findCourseInfo(Request request) {
 		// 存在字串判斷，空或無轉成空字串；執行自定義方法，尋找資料
-		List<Course> courseList = courseDao.findByNumberOrTitle(
+		List<Course> courseList = courseDao.searchByNumberOrTitle(
 				StringUtils.hasText(request.getCourseNumber()) ? request.getCourseNumber() : "",
 				StringUtils.hasText(request.getCourseTitle()) ? request.getCourseTitle() : "");
 		return courseList.size() > 0 ? new Response(courseList, RtnCode.SUCCESS.getMessage())

@@ -133,5 +133,4 @@ public class StudentCourseTable {
 	public void setCreditsLimit(int creditsLimit) {
 		this.creditsLimit = creditsLimit;
 	}
-	
 }
