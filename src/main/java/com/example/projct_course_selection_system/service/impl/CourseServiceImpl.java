@@ -1,6 +1,5 @@
 package com.example.projct_course_selection_system.service.impl;
 
-import java.time.Duration;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +8,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.example.projct_course_selection_system.constants.RtnCode;
@@ -38,8 +36,8 @@ public class CourseServiceImpl implements CourseService {
 			LocalTime endTime, int credits) {
 		// 0.防呆:輸入參數空、白
 		if (!StringUtils.hasText(courseNumber) || !StringUtils.hasText(courseTitle) || !StringUtils.hasText(schedule)
-				|| startTime == null || endTime == null || startTime.toString().isEmpty()
-				|| endTime.toString().isEmpty()) {
+				|| startTime == null || endTime == null || startTime.toString().isBlank()
+				|| endTime.toString().isBlank()) {
 			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
 		}
 
@@ -55,27 +53,14 @@ public class CourseServiceImpl implements CourseService {
 		if (credits < 1 || credits > 3) {
 			return new Response(RtnCode.PATTERNISNOTMATCH.getMessage());
 		}
-		// 1-4.符合型式:學分要與課堂時間"要"相差一小時內，不然學分與學習時數不相符
-		Duration duration = Duration.between(startTime, endTime);
-		if (LocalTime.of((credits), 0).getHour() > duration.toHours()
-				|| LocalTime.of((credits + 1), 0).getHour() < duration.toHours()) {
-			return new Response(RtnCode.PATTERNISNOTMATCH.getMessage());
-		}
 
-		// 2.檢查重複:確認有無重複課程
-		boolean isExist = courseDao.existsById(courseNumber);
-		if (isExist) {
-			return new Response(RtnCode.ALREADY_EXISTED.getMessage());
-		}
-
-		// 3.儲入資料庫:新增一個course，會自動帶入修習人數上限
-		Course course = new Course(courseNumber, courseTitle, schedule, startTime, endTime, credits);
-		return new Response(courseDao.save(course), RtnCode.SUCCESS.getMessage());
+		// 2.儲存資料並檢查重複
+		return courseDao.insertCourse(courseNumber, courseTitle, schedule, startTime, endTime, credits) == 0 ?
+				new Response(RtnCode.ALREADY_EXISTED.getMessage()):new Response(RtnCode.SUCCESSFUL.getMessage());
 	}
 
 	@Override
 	public Response reviseCourse(Request request) {
-		boolean isRevise = false;
 		// 0.防呆:輸入參數key空、白
 		if (request == null || !StringUtils.hasText(request.getCourseNumber())) {
 			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
@@ -88,14 +73,14 @@ public class CourseServiceImpl implements CourseService {
 			return new Response(RtnCode.NOT_FOUND.getMessage());
 		}
 
+		boolean isRevise = false;
 		// 2-1.修改課名
 		if (StringUtils.hasText(request.getCourseTitle())) {
 			// 排除:修改資訊與原資訊相同
 			if (res.get().getCourseTitle().equals(request.getCourseTitle())) {
 				return new Response(RtnCode.REPEAT.getMessage());
 			}
-			// 呼叫修改課名方法
-			courseDao.updateCourseTitleById(request.getCourseNumber(), request.getCourseTitle());
+			res.get().setCourseTitle(request.getCourseTitle());
 			isRevise = true;
 		}
 		// 2-2.修改日期
@@ -108,8 +93,7 @@ public class CourseServiceImpl implements CourseService {
 			if (res.get().getSchedule().equals(request.getSchedule())) {
 				return new Response(RtnCode.REPEAT.getMessage());
 			}
-			// 呼叫修改日期方法
-			courseDao.updateCourseScheduleById(request.getCourseNumber(), request.getSchedule());
+			res.get().setSchedule(request.getSchedule());
 			isRevise = true;
 		}
 		// 2-3.修改時間
@@ -124,8 +108,8 @@ public class CourseServiceImpl implements CourseService {
 					|| res.get().getEndTime().equals(request.getEndTime())) {
 				return new Response(RtnCode.REPEAT.getMessage());
 			}
-			// 呼叫修改時間方法
-			courseDao.updateCourseTimeById(request.getCourseNumber(), request.getStartTime(), request.getEndTime());
+			res.get().setStartTime(request.getStartTime());
+			res.get().setEndTime(request.getEndTime());
 			isRevise = true;
 		}
 		// 2-4.修改學分
@@ -134,69 +118,29 @@ public class CourseServiceImpl implements CourseService {
 			if (res.get().getCredits() == request.getCredits()) {
 				return new Response(RtnCode.REPEAT.getMessage());
 			}
-			// 呼叫修改學分方法
-			courseDao.updateCourseCreditsById(request.getCourseNumber(), request.getCredits());
+			res.get().setCredits(request.getCredits());
+			isRevise = true;
 		}
 
-		// 3.判斷是否有修改內容
-		if (!isRevise) {
-			return new Response(RtnCode.INCORRECT.getMessage());
-		}
-		return new Response(RtnCode.SUCCESSFUL.getMessage());
+		// 3.儲存並判斷是否有修改內容
+		return isRevise ? new Response(courseDao.save(res.get()), RtnCode.SUCCESS.getMessage())
+				: new Response(RtnCode.INCORRECT.getMessage());
 	}
 
 	@Override
 	public Response deleteCourse(String courseNumber) {
-		// 0.防呆:輸入參數空、白
-		if (!StringUtils.hasText(courseNumber)) {
-			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
-		}
-
-		// 1.查詢資料是否存在
-		Optional<Course> res = courseDao.findById(courseNumber);
-		if (!res.isPresent()) {
-			return new Response(RtnCode.NOT_FOUND.getMessage());
-		}
-
-		// 2.確認修課人數，若有人修課，不得刪除課程
-		if (res.get().getPersonlimit() != 3) {
-			return new Response(RtnCode.BEEN_SELECTED.getMessage());
-		}
-
-		// 3.刪除課程
-		courseDao.delete(res.get());
-		return new Response(RtnCode.SUCCESSFUL.getMessage());
+		// 刪除課程
+		return courseDao.deleteCourse(courseNumber) == 0 ? new Response(RtnCode.NOT_FOUND.getMessage())
+				: new Response(RtnCode.SUCCESSFUL.getMessage());
 	}
 
 	@Override
 	public Response findCourseInfo(Request request) {
-		// 0-1.防呆:輸入參數空、白
-		if (!StringUtils.hasText(request.getCourseNumber()) && !StringUtils.hasText(request.getCourseTitle())) {
-			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
-		}
-		// 0-1.防呆:重複輸入
-		if (StringUtils.hasText(request.getCourseNumber()) && StringUtils.hasText(request.getCourseTitle())) {
-			return new Response(RtnCode.REPEAT.getMessage());
-		}
-
-		// 1.用courseNumber搜尋
-		if (StringUtils.hasText(request.getCourseNumber())) {
-			// 尋找資料
-			Optional<Course> res = courseDao.findById(request.getCourseNumber());
-			if (!res.isPresent()) {
-				return new Response(RtnCode.NOT_FOUND.getMessage());
-			}
-			// 印出資料
-			return new Response(res.get(), RtnCode.SUCCESS.getMessage());
-		}
-
-		// 2.用courseTitle搜尋
-		// 尋找資料
-		List<Course> res = courseDao.findByCourseTitle(request.getCourseTitle());
-		if (CollectionUtils.isEmpty(res)) {
-			return new Response(RtnCode.NOT_FOUND.getMessage());
-		}
-		// 印出資料
-		return new Response(res, RtnCode.SUCCESS.getMessage());
+		// 存在字串判斷，空或無轉成空字串；執行自定義方法，尋找資料
+		List<Course> courseList = courseDao.findByNumberOrTitle(
+				StringUtils.hasText(request.getCourseNumber()) ? request.getCourseNumber() : "",
+				StringUtils.hasText(request.getCourseTitle()) ? request.getCourseTitle() : "");
+		return courseList.size() > 0 ? new Response(courseList, RtnCode.SUCCESS.getMessage())
+				: new Response(RtnCode.NOT_FOUND.getMessage());
 	}
 }

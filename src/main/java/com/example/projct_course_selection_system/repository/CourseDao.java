@@ -15,39 +15,30 @@ import com.example.projct_course_selection_system.entity.Course;
 @Repository
 public interface CourseDao extends JpaRepository<Course, String> {
 
-	// 課程名稱查詢
-	public List<Course> findByCourseTitle(String courseTitle);
+	// 新增課程
+	@Transactional
+	@Modifying
+	@Query(value = "insert into course (course_number, course_title, schedule, start_time, end_time, credits, person_limit) "
+			+ "select :courseNumber, :courseTitle, :inputSchedule, :inputStartTime, :inputEndTime , :inputCredits, 3 "
+			+ "where not exists (select 1 from course where course_number = :courseNumber)", nativeQuery = true)
+	public int insertCourse(@Param("courseNumber") String courseNumber, @Param("courseTitle") String courseTitle,
+			@Param("inputSchedule") String schedule, @Param("inputStartTime") LocalTime startTime,
+			@Param("inputEndTime") LocalTime endTime, @Param("inputCredits") int credits);
 
-	// 更新課程資訊-更改課名
+	// 刪除課程
 	@Transactional
 	@Modifying
-	@Query("update Course c set c.courseTitle = :title where c.courseNumber = :id")
-	public int updateCourseTitleById(
-			@Param("id") String courseNumber, 
-			@Param("title") String courseTitle);
+	@Query("delete from Course c where c.courseNumber = :number and c.personLimit = 3")
+	public int deleteCourse(@Param("number") String courseNumber);
 
-	// 更新課程資訊-更改日期
-	@Transactional
-	@Modifying
-	@Query("update Course c set c.schedule = :schedule where c.courseNumber = :id")
-	public int updateCourseScheduleById(
-			@Param("id") String courseNumber, 
-			@Param("schedule") String courseSchedule);
-	
-	// 更新課程資訊-更改時間
-	@Transactional
-	@Modifying
-	@Query("update Course c set c.startTime = :startTime, c.endTime = :endTime where c.courseNumber = :id")
-	public int updateCourseTimeById(
-			@Param("id") String courseNumber, 
-			@Param("startTime") LocalTime startTime, 
-			@Param("endTime") LocalTime endTime);
+	// 由課程編號或課程名稱尋找課程資訊
+	@Query("select c.courseNumber, c.courseTitle, c.schedule, c.startTime, c.endTime, c.credits, c.personLimit "
+			+ "from Course c where c.courseNumber = :number or c.courseTitle = :title")
+	public List<Course> findByNumberOrTitle(@Param("number") String courseNumber, @Param("title") String courseTitle);
 
-	// 更新課程資訊-更改學分
+	// 更新修課人數
 	@Transactional
 	@Modifying
-	@Query("update Course c set c.credits = :credits where c.courseNumber = :id")
-	public int updateCourseCreditsById(
-			@Param("id") String courseNumber, 
-			@Param("credits") int credits);
+	@Query("update Course c set c.personLimit = :personLimit where c.courseNumber = :courseNumber")
+	public int reviseCoursePerson(@Param("courseNumber") String courseNumber,@Param("personLimit") int personLimit);
 }

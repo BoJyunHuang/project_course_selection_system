@@ -1,6 +1,5 @@
 package com.example.projct_course_selection_system.repository;
 
-import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,13 +15,35 @@ import com.example.projct_course_selection_system.vo.StudentCourseTable;
 @Repository
 public interface StudentDao extends JpaRepository<Student, String> {
 
-	// 依照學生ID找出學生修習課程
+	// 新增學生
 	@Transactional
 	@Modifying
-	@Query("select new com.example.projct_course_selection_system.vo.StudentCourseTable(c.courseNumber, c.courseTitle, "
-			+ "c.schedule, c.startTime,	c.endTime, c.credits, c.personlimit, s.studentID, s.name, s.creditsLimit) "
-			+ "from Course c join Student s on s.courseNumber like concat('%' , c.courseNumber , '%') "
+	@Query(value = "insert into student (student_ID, name, course_number, credits_limit) select :inputID, :inputName,"
+			+ " null, 10 where not exists (select 1 from student where student_ID = :inputID)", nativeQuery = true)
+	public int insertStudent(@Param("inputID") String studentID, @Param("inputName") String name);
+
+	// 依照學生ID找出學生修習課程
+	@Query("select new com.example.projct_course_selection_system.vo.StudentCourseTable "
+			+ "(c.courseNumber, s.courseNumbers, c.courseTitle, c.schedule, c.startTime, c.endTime, c.credits, "
+			+ "c.personLimit, s.studentID, s.name, s.creditsLimit) "
+			+ "from Course c join Student s on s.courseNumbers like concat('%' , c.courseNumber , '%') "
 			+ "where s.studentID = :studentID")
-	public List<StudentCourseTable> findStudentCourseList(@Param("studentID")String studentID);
-	
+	public List<StudentCourseTable> findStudentCourseList(@Param("studentID") String studentID);
+
+	// 依照學生ID及課程資訊尋找是否有資料
+	@Query("select new com.example.projct_course_selection_system.vo.StudentCourseTable"
+			+ "(c.courseNumber, s.courseNumbers, c.courseTitle, c.schedule, c.startTime, c.endTime, c.credits, "
+			+ "c.personLimit, s.studentID, s.name, s.creditsLimit) "
+			+ "from Course c join Student s on s.courseNumbers like concat('%' , c.courseNumber, '%') "
+			+ "where s.studentID = :studentID and c.courseNumber = :courseNumber")
+	public StudentCourseTable findStudentCourse(@Param("studentID") String studentID,
+			@Param("courseNumber") String courseNumber);
+
+	// 更新學生課表及學分
+	@Transactional
+	@Modifying
+	@Query("update Student s set s.courseNumbers = :numbers, s.creditsLimit = :limit where s.studentID = :ID")
+	public int reviseStudentCredits(@Param("ID") String studentID, @Param("numbers") String courseNumbers,
+			@Param("limit") int creditsLimit);
+
 }

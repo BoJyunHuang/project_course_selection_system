@@ -45,16 +45,16 @@ public class SelectCourseTests {
 	public void beforeEach() {
 		// 最初執行，建立測試資料 學生兩筆測試資料，一筆(s1)有選課，一筆(s2)沒選課 資訊如下
 		Student s1 = new Student("TXXX1", "TXXX1");
-		s1.setCourseNumber("CXX1, CXX2");
+		s1.setCourseNumbers("CXX1, CXX2");
 		s1.setCreditsLimit(4);
 		Student s2 = new Student("TXXX2", "TXXX2");
 		List<Student> sList = new ArrayList<>(Arrays.asList(s1, s2));
 
 		// 課程五筆測試資料，課程皆佔三學分 資訊如下
 		Course c1 = new Course("CXX1", "CXX1", "Monday", LocalTime.of(9, 0), LocalTime.of(12, 0), 3);
-		c1.setPersonlimit(0);
+		c1.setPersonLimit(0);
 		Course c2 = new Course("CXX2", "CXX2", "Tuesday", LocalTime.of(9, 0), LocalTime.of(12, 0), 3);
-		c2.setPersonlimit(1);
+		c2.setPersonLimit(1);
 		Course c3 = new Course("CXX3", "CXX3", "Monday", LocalTime.of(9, 0), LocalTime.of(12, 0), 3);
 		Course c4 = new Course("CXX4", "CXX2", "Wednesday", LocalTime.of(9, 0), LocalTime.of(12, 0), 3);
 		Course c5 = new Course("CXX5", "CXX5", "Wednesday", LocalTime.of(11, 0), LocalTime.of(14, 0), 3);
@@ -87,47 +87,49 @@ public class SelectCourseTests {
 		List<StudentCourseTable> res2 = sDao.findStudentCourseList("TXXX2");
 		Assert.isTrue(res2.isEmpty(), RtnCode.TEST2_ERROR.getMessage());
 	}
+	
+	@Test
+	public void findStudentCourseTest() {
+		// 取用資料庫已存在資料
+		StudentCourseTable res1 = sDao.findStudentCourse("TXXX1","CXX1");
+		Assert.isTrue(res1.getCourseNumbers().contains("CXX1"), RtnCode.TEST1_ERROR.getMessage());
+		// 無課程狀況
+		StudentCourseTable res2 = sDao.findStudentCourse("TXXX2","CXX1");
+		Assert.isTrue(res2.getCourseNumber() == null, RtnCode.TEST2_ERROR.getMessage());
+	}
 
 	@Test
-	public void selectCourseEmptyTest() {
+	public void selectCourse1Test() {
 		// 狀況:輸入為空
 		Response res1 = cSele.selectCourse(null, null);
 		Assert.isTrue(res1.getMessage().equals(RtnCode.CANNOT_EMPTY.getMessage()), RtnCode.TEST1_ERROR.getMessage());
-	}
-
-	@Test
-	public void selectCourseNotFoundTest() {
 		// 狀況:學生不存在
 		List<String> cList = new ArrayList<>(Arrays.asList("CXX1", "CXXX"));
-		Response res1 = cSele.selectCourse("TXXX3", cList);
-		Assert.isTrue(res1.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST1_ERROR.getMessage());
+		Response res2 = cSele.selectCourse("TXXX3", cList);
+		Assert.isTrue(res2.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST2_ERROR.getMessage());
 		// 狀況:部分課程不存在
-		Response res2 = cSele.selectCourse("TXXX1", cList);
-		Assert.isTrue(res2.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST1_ERROR.getMessage());
-	}
-
-	@Test
-	public void selectCourseCheckTest() {
+		Response res3 = cSele.selectCourse("TXXX1", cList);
+		Assert.isTrue(res3.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST3_ERROR.getMessage());
 		// 狀況:選課人數已滿
 		List<String> cList1 = new ArrayList<>(Arrays.asList("CXX1", "CXX2"));
-		Response res1 = cSele.selectCourse("TXXX2", cList1);
-		Assert.isTrue(res1.getMessage().equals(RtnCode.FULLY_SELECTED.getMessage()), RtnCode.TEST1_ERROR.getMessage());
+		Response res4 = cSele.selectCourse("TXXX2", cList1);
+		Assert.isTrue(res4.getMessage().equals(RtnCode.FULLY_SELECTED.getMessage()), RtnCode.TEST4_ERROR.getMessage());
 		// 狀況:課名相同
 		List<String> cList2 = new ArrayList<>(Arrays.asList("CXX2", "CXX4"));
-		Response res2 = cSele.selectCourse("TXXX2", cList2);
-		Assert.isTrue(res2.getMessage().equals(RtnCode.ALREADY_EXISTED.getMessage()), RtnCode.TEST2_ERROR.getMessage());
+		Response res5 = cSele.selectCourse("TXXX2", cList2);
+		Assert.isTrue(res5.getMessage().equals(RtnCode.ALREADY_EXISTED.getMessage()), RtnCode.TEST5_ERROR.getMessage());
 		// 狀況:衝堂
 		List<String> cList3 = new ArrayList<>(Arrays.asList("CXX4", "CXX5"));
-		Response res3 = cSele.selectCourse("TXXX2", cList3);
-		Assert.isTrue(res3.getMessage().equals(RtnCode.CONFLICT.getMessage()), RtnCode.TEST3_ERROR.getMessage());
+		Response res6 = cSele.selectCourse("TXXX2", cList3);
+		Assert.isTrue(res6.getMessage().equals(RtnCode.CONFLICT.getMessage()), RtnCode.TEST6_ERROR.getMessage());
 		// 超過學分上限
 		List<String> cList4 = new ArrayList<>(Arrays.asList("CXX2", "CXX3", "CXX5", "CXX6"));
-		Response res4 = cSele.selectCourse("TXXX2", cList4);
-		Assert.isTrue(res4.getMessage().equals(RtnCode.OUT_OF_LIMIT.getMessage()), RtnCode.TEST4_ERROR.getMessage());
+		Response res7 = cSele.selectCourse("TXXX2", cList4);
+		Assert.isTrue(res7.getMessage().equals(RtnCode.OUT_OF_LIMIT.getMessage()), RtnCode.TEST7_ERROR.getMessage());
 	}
 
 	@Test
-	public void selectCoursesCheckTest() {
+	public void selectCourses2Test() {
 		// 狀況:超選學分
 		List<String> cList1 = new ArrayList<>(Arrays.asList("CXX5", "CXX6"));
 		Response res1 = cSele.selectCourse("TXXX1", cList1);
@@ -139,73 +141,50 @@ public class SelectCourseTests {
 		// 狀況:衝堂
 		List<String> cList3 = new ArrayList<>(Arrays.asList("CXX3"));
 		Response res3 = cSele.selectCourse("TXXX1", cList3);
-		Assert.isTrue(res3.getMessage().equals(RtnCode.INCORRECT.getMessage()), RtnCode.TEST3_ERROR.getMessage());
-	}
-
-	@Test
-	public void selectCourseSuccessTest() {
+		Assert.isTrue(res3.getMessage().equals(RtnCode.CONFLICT.getMessage()), RtnCode.TEST3_ERROR.getMessage());
 		// 狀況:已存在課程
-		List<String> cList1 = new ArrayList<>(Arrays.asList("CXX5"));
-		Response res1 = cSele.selectCourse("TXXX1", cList1);
-		Assert.isTrue(res1.getStudent().getCourseNumber().contains("CXX5"), RtnCode.TEST1_ERROR.getMessage());
+		List<String> cList4 = new ArrayList<>(Arrays.asList("CXX5"));
+		Response res4 = cSele.selectCourse("TXXX1", cList4);
+		Assert.isTrue(res4.getStudent().getCourseNumbers().contains("CXX5"), RtnCode.TEST4_ERROR.getMessage());
 		// 狀況:未存在課程
-		List<String> cList2 = new ArrayList<>(Arrays.asList("CXX3", "CXX4"));
-		Response res2 = cSele.selectCourse("TXXX2", cList2);
-		Assert.isTrue(res2.getStudent().getCreditsLimit() == 4, RtnCode.TEST2_ERROR.getMessage());
+		List<String> cList5 = new ArrayList<>(Arrays.asList("CXX3", "CXX4"));
+		Response res5 = cSele.selectCourse("TXXX2", cList5);
+		Assert.isTrue(res5.getStudent().getCreditsLimit() == 4, RtnCode.TEST5_ERROR.getMessage());
 	}
 
 	@Test
-	public void withdrawCourseEmptyTest() {
+	public void withdrawCourseTest() {
 		// 狀況:輸入為空
 		Response res1 = cSele.withdrawCourse(null, null);
-		Assert.isTrue(res1.getMessage().equals(RtnCode.CANNOT_EMPTY.getMessage()), RtnCode.TEST1_ERROR.getMessage());
-	}
-
-	@Test
-	public void withdrawCourseNotFoundTest() {
-		// 狀況:無此學生
-		Response res1 = cSele.withdrawCourse("TXXXX", "CXX1");
 		Assert.isTrue(res1.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST1_ERROR.getMessage());
-		// 狀況:無此課程
-		Response res2 = cSele.withdrawCourse("TXXX1", "CXXX");
+		// 狀況:無此學生
+		Response res2 = cSele.withdrawCourse("TXXXX", "CXX1");
 		Assert.isTrue(res2.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST2_ERROR.getMessage());
-		// 狀況:學生無此課程
-		Response res3 = cSele.withdrawCourse("TXXX1", "CXX3");
+		// 狀況:無此課程
+		Response res3 = cSele.withdrawCourse("TXXX1", "CXXX");
 		Assert.isTrue(res3.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST3_ERROR.getMessage());
-	}
-	
-	@Test
-	public void withdrawCourseSuccessTest() {
+		// 狀況:學生無此課程
+		Response res4 = cSele.withdrawCourse("TXXX1", "CXX3");
+		Assert.isTrue(res4.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST4_ERROR.getMessage());
 		// 狀況:成功退課
-		Response res1 = cSele.withdrawCourse("TXXX1", "CXX1");
-		Assert.isTrue(res1.getMessage().equals(RtnCode.SUCCESSFUL.getMessage()), RtnCode.TEST1_ERROR.getMessage());
+		Response res5 = cSele.withdrawCourse("TXXX1", "CXX1");
+		Assert.isTrue(res5.getMessage().equals(RtnCode.SUCCESSFUL.getMessage()), RtnCode.TEST5_ERROR.getMessage());
 	}
 
 
 	@Test
-	public void courseScheduleEmptyTest() {
+	public void courseScheduleTest() {
 		// 狀況:輸入為空
 		Response res1 = cSele.courseSchedule(null);
-		Assert.isTrue(res1.getMessage().equals(RtnCode.CANNOT_EMPTY.getMessage()), RtnCode.TEST1_ERROR.getMessage());
-	}
-
-	@Test
-	public void courseScheduleNotFoundTest() {
-		// 狀況:不存在學生資料
-		String studentID = "TXXXX";
-		Response res1 = cSele.courseSchedule(studentID);
 		Assert.isTrue(res1.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST1_ERROR.getMessage());
-		// 狀況:不存在學生課表
-		studentID = "TXXX2";
-		Response res2 = cSele.courseSchedule(studentID);
+		// 狀況:不存在學生資料
+		Response res2 = cSele.courseSchedule("TXXXX");
 		Assert.isTrue(res2.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST2_ERROR.getMessage());
-	}
-
-	@Test
-	public void courseScheduleSuccessTest() {
+		// 狀況:不存在學生課表
+		Response res3 = cSele.courseSchedule( "TXXX2");
+		Assert.isTrue(res3.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST3_ERROR.getMessage());
 		// 狀況:成功
-		String studentID = "TXXX1";
-		Response res1 = cSele.courseSchedule(studentID);
-		Assert.isTrue(res1.getMessage().equals(RtnCode.SUCCESS.getMessage()), RtnCode.TEST1_ERROR.getMessage());
+		Response res4 = cSele.courseSchedule("TXXX1");
+		Assert.isTrue(res4.getMessage().equals(RtnCode.SUCCESS.getMessage()), RtnCode.TEST4_ERROR.getMessage());
 	}
 }

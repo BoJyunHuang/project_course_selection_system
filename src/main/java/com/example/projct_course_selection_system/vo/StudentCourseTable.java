@@ -6,7 +6,7 @@ public class StudentCourseTable {
 
 	// 共同屬性
 	private String courseNumber;
-
+	private String courseNumbers;
 	// Course屬性
 	private String courseTitle;
 	private String schedule;
@@ -29,10 +29,12 @@ public class StudentCourseTable {
 		this.courseNumber = courseNumber;
 	}
 
-	public StudentCourseTable(String courseNumber, String courseTitle, String schedule, LocalTime startTime,
-			LocalTime endTime, int credits, int personlimit, String studentID, String name, int creditsLimit) {
+	public StudentCourseTable(String courseNumber, String courseNumbers, String courseTitle, String schedule,
+			LocalTime startTime, LocalTime endTime, int credits, int personlimit, String studentID, String name,
+			int creditsLimit) {
 		super();
 		this.courseNumber = courseNumber;
+		this.courseNumbers = courseNumbers;
 		this.courseTitle = courseTitle;
 		this.schedule = schedule;
 		this.startTime = startTime;
@@ -50,6 +52,14 @@ public class StudentCourseTable {
 
 	public void setCourseNumber(String courseNumber) {
 		this.courseNumber = courseNumber;
+	}
+
+	public String getCourseNumbers() {
+		return courseNumbers;
+	}
+
+	public void setCourseNumbers(String courseNumbers) {
+		this.courseNumbers = courseNumbers;
 	}
 
 	public String getCourseTitle() {

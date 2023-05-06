@@ -13,6 +13,8 @@ public enum RtnCode {
 	TEST3_ERROR("401"," Test3 is error!"),
 	TEST4_ERROR("401"," Test4 is error!"),
 	TEST5_ERROR("401"," Test5 is error!"),
+	TEST6_ERROR("401"," Test6 is error!"),
+	TEST7_ERROR("401"," Test7 is error!"),
 	NOT_FOUND("404","Not found!"),
 	ALREADY_EXISTED("409","Input has already existed!"),
 	REPEAT("409","Data is repeat!"),

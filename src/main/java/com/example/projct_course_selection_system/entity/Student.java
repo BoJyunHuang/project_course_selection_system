@@ -19,9 +19,9 @@ public class Student {
 	@Column(name = "name")
 	private String name; // 學生姓名
 
-	@Column(name = "course_number")
-	private String courseNumber; // 課程代碼
-	
+	@Column(name = "course_numbers")
+	private String courseNumbers; // 課程代碼
+
 	@Column(name = "credits_limit")
 	private int creditsLimit = 10; // 修習學分上限
 
@@ -33,13 +33,6 @@ public class Student {
 		super();
 		this.studentID = studentID;
 		this.name = name;
-	}
-
-	public Student(String studentID, String name, String courseNumber) {
-		super();
-		this.studentID = studentID;
-		this.name = name;
-		this.courseNumber = courseNumber;
 	}
 
 	public String getStudentID() {
@@ -58,12 +51,12 @@ public class Student {
 		this.name = name;
 	}
 
-	public String getCourseNumber() {
-		return courseNumber;
+	public String getCourseNumbers() {
+		return courseNumbers;
 	}
 
-	public void setCourseNumber(String courseNumber) {
-		this.courseNumber = courseNumber;
+	public void setCourseNumbers(String courseNumbers) {
+		this.courseNumbers = courseNumbers;
 	}
 
 	public int getCreditsLimit() {
@@ -73,5 +66,5 @@ public class Student {
 	public void setCreditsLimit(int creditsLimit) {
 		this.creditsLimit = creditsLimit;
 	}
-	
+
 }

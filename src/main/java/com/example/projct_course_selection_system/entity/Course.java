@@ -34,7 +34,7 @@ public class Course {
 	private int credits; // 學分
 	
 	@Column(name = "person_limit")
-	private int personlimit = 3; // 修習人數上限
+	private int personLimit = 3; // 修習人數上限
 
 	public Course() {
 		super();
@@ -99,12 +99,12 @@ public class Course {
 		this.credits = credits;
 	}
 
-	public int getPersonlimit() {
-		return personlimit;
+	public int getPersonLimit() {
+		return personLimit;
 	}
 
-	public void setPersonlimit(int personlimit) {
-		this.personlimit = personlimit;
+	public void setPersonLimit(int personLimit) {
+		this.personLimit = personLimit;
 	}
 		
 }
