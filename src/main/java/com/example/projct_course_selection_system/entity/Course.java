@@ -8,6 +8,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "course")
@@ -16,18 +17,22 @@ public class Course {
 
 	@Id
 	@Column(name = "course_number")
+	@JsonProperty("course_number")
 	private String courseNumber; // 課程編碼
 
 	@Column(name = "course_title")
+	@JsonProperty("course_title")
 	private String courseTitle; // 課程名稱
 
 	@Column(name = "schedule")
 	private String schedule; // 上課星期
 
 	@Column(name = "start_time")
+	@JsonProperty("start_time")
 	private LocalTime startTime; // 上課開始時間
 
 	@Column(name = "end_time")
+	@JsonProperty("end_time")
 	private LocalTime endTime; // 上課結束時間
 	
 	@Column(name = "credits")

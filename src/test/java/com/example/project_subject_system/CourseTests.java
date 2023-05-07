@@ -130,59 +130,59 @@ public class CourseTests {
 	@Test
 	public void reviseCourse1Test() {
 		// 狀況:輸入為空
-		Request r = new Request();
-		Response res1 = cSer.reviseCourse(r);
+		Course c = new Course();
+		Response res1 = cSer.reviseCourse(c);
 		Assert.isTrue(res1.getMessage().equals(RtnCode.CANNOT_EMPTY.getMessage()), RtnCode.TEST1_ERROR.getMessage());
 		// 狀況:課程編號不存在
-		r.setCourseNumber("TXX2");
-		Response res2 = cSer.reviseCourse(r);
+		c.setCourseNumber("TXX2");
+		Response res2 = cSer.reviseCourse(c);
 		Assert.isTrue(res2.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST2_ERROR.getMessage());
-		r.setCourseNumber("TXXX");
+		c.setCourseNumber("TXXX");
 		// 狀況:課名相同
-		r.setCourseTitle("TestCourse");
-		Response res3 = cSer.reviseCourse(r);
+		c.setCourseTitle("TestCourse");
+		Response res3 = cSer.reviseCourse(c);
 		Assert.isTrue(res3.getMessage().equals(RtnCode.REPEAT.getMessage()), RtnCode.TEST3_ERROR.getMessage());
-		r.setCourseTitle("");
+		c.setCourseTitle("");
 		// 狀況:日期相同
-		r.setSchedule("Monday");
-		Response res4 = cSer.reviseCourse(r);
+		c.setSchedule("Monday");
+		Response res4 = cSer.reviseCourse(c);
 		Assert.isTrue(res4.getMessage().equals(RtnCode.REPEAT.getMessage()), RtnCode.TEST4_ERROR.getMessage());
-		r.setSchedule("");
+		c.setSchedule("");
 		// 狀況:時間相同
-		r.setStartTime(LocalTime.of(9, 0));
-		r.setEndTime(LocalTime.of(11, 0));
-		Response res5 = cSer.reviseCourse(r);
+		c.setStartTime(LocalTime.of(9, 0));
+		c.setEndTime(LocalTime.of(11, 0));
+		Response res5 = cSer.reviseCourse(c);
 		Assert.isTrue(res5.getMessage().equals(RtnCode.REPEAT.getMessage()), RtnCode.TEST5_ERROR.getMessage());
-		r.setStartTime(null);
-		r.setEndTime(null);
+		c.setStartTime(null);
+		c.setEndTime(null);
 		// 狀況:學分相同
-		r.setCredits(2);
-		Response res6 = cSer.reviseCourse(r);
+		c.setCredits(2);
+		Response res6 = cSer.reviseCourse(c);
 		Assert.isTrue(res6.getMessage().equals(RtnCode.REPEAT.getMessage()), RtnCode.TEST6_ERROR.getMessage());
 	}
 
 	@Test
 	public void reviseCourse2Test() {
 		// 狀況:日期為周末
-		Request r = new Request();
-		r.setCourseNumber("TXXX");
-		r.setSchedule("Sunday");
-		Response res1 = cSer.reviseCourse(r);
+		Course c = new Course();
+		c.setCourseNumber("TXXX");
+		c.setSchedule("Sunday");
+		Response res1 = cSer.reviseCourse(c);
 		Assert.isTrue(res1.getMessage().equals(RtnCode.PATTERN_IS_NOT_MATCH.getMessage()),	RtnCode.TEST1_ERROR.getMessage());
-		r.setSchedule(null);
+		c.setSchedule(null);
 		// 狀況:時間為半夜
-		r.setStartTime(LocalTime.of(20, 0));
-		r.setEndTime(LocalTime.of(21, 0));
-		Response res2 = cSer.reviseCourse(r);
+		c.setStartTime(LocalTime.of(20, 0));
+		c.setEndTime(LocalTime.of(21, 0));
+		Response res2 = cSer.reviseCourse(c);
 		Assert.isTrue(res2.getMessage().equals(RtnCode.PATTERN_IS_NOT_MATCH.getMessage()), RtnCode.TEST2_ERROR.getMessage());
-		r.setStartTime(null);
-		r.setEndTime(null);
+		c.setStartTime(null);
+		c.setEndTime(null);
 		// 狀況:空資料
-		Response res3 = cSer.reviseCourse(r);
+		Response res3 = cSer.reviseCourse(c);
 		Assert.isTrue(res3.getMessage().equals(RtnCode.INCORRECT.getMessage()), RtnCode.TEST3_ERROR.getMessage());
 		// 狀況:改課名
-		r.setCourseTitle("TestRevise");
-		Response res4 = cSer.reviseCourse(r);
+		c.setCourseTitle("TestRevise");
+		Response res4 = cSer.reviseCourse(c);
 		Assert.isTrue(res4.getMessage().equals(RtnCode.SUCCESS.getMessage()), RtnCode.TEST4_ERROR.getMessage());
 	}
 
@@ -201,23 +201,23 @@ public class CourseTests {
 	@Test
 	public void findCourseInfoTest() {
 		// 帶入生成資料
-		Request r = new Request();
+		Course c = new Course();
 		// 狀況:輸入不存在課程編號
-		r.setCourseNumber("TXX1");
-		Response res1 = cSer.findCourseInfo(r);
+		c.setCourseNumber("TXX1");
+		Response res1 = cSer.findCourseInfo(c);
 		Assert.isTrue(res1.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST1_ERROR.getMessage());
 		// 狀況:輸入不存在課程名稱
-		r.setCourseTitle("Test2");
-		Response res2 = cSer.findCourseInfo(r);
+		c.setCourseTitle("Test2");
+		Response res2 = cSer.findCourseInfo(c);
 		Assert.isTrue(res2.getMessage().equals(RtnCode.NOT_FOUND.getMessage()), RtnCode.TEST2_ERROR.getMessage());
 		// 狀況:存在課程編號
-		r.setCourseNumber("TXXX");
-		Response res3 = cSer.findCourseInfo(r);
+		c.setCourseNumber("TXXX");
+		Response res3 = cSer.findCourseInfo(c);
 		Assert.isTrue(res3.getMessage().equals(RtnCode.SUCCESS.getMessage()), RtnCode.TEST3_ERROR.getMessage());
-		r.setCourseNumber(null);
+		c.setCourseNumber(null);
 		// 狀況:存在課程名稱
-		r.setCourseTitle("TestCourse");
-		Response res4 = cSer.findCourseInfo(r);
+		c.setCourseTitle("TestCourse");
+		Response res4 = cSer.findCourseInfo(c);
 		Assert.isTrue(res4.getMessage().equals(RtnCode.SUCCESS.getMessage()), RtnCode.TEST4_ERROR.getMessage());
 	}
 

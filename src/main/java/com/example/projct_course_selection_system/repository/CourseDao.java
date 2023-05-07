@@ -32,7 +32,8 @@ public interface CourseDao extends JpaRepository<Course, String> {
 	public int deleteCourse(@Param("number") String courseNumber);
 
 	// 由課程編號或課程名稱尋找課程資訊
-	@Query(value = "select * from course c where c.course_number = :number or c.course_title = :title", nativeQuery = true)
+	@Query(value = "select * from course c where c.course_number = :number or c.course_title like concat('%', :title, '%')"
+			, nativeQuery = true)
 	public List<Course> searchByNumberOrTitle(@Param("number") String courseNumber, @Param("title") String courseTitle);
 
 	// 更新修課人數

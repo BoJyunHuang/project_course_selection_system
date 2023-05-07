@@ -60,14 +60,14 @@ public class CourseServiceImpl implements CourseService {
 	}
 
 	@Override
-	public Response reviseCourse(Request request) {
+	public Response reviseCourse(Course course) {
 		// 0.防呆:輸入參數key空、白
-		if (request == null || !StringUtils.hasText(request.getCourseNumber())) {
+		if (course == null || !StringUtils.hasText(course.getCourseNumber())) {
 			return new Response(RtnCode.CANNOT_EMPTY.getMessage());
 		}
 
 		// 1.查詢資料是否存在
-		Optional<Course> res = courseDao.findById(request.getCourseNumber());
+		Optional<Course> res = courseDao.findById(course.getCourseNumber());
 		// 排除:資料不存在
 		if (!res.isPresent()) {
 			return new Response(RtnCode.NOT_FOUND.getMessage());
@@ -75,50 +75,50 @@ public class CourseServiceImpl implements CourseService {
 
 		boolean isRevise = false;
 		// 2-1.修改課名
-		if (StringUtils.hasText(request.getCourseTitle())) {
+		if (StringUtils.hasText(course.getCourseTitle())) {
 			// 排除:修改資訊與原資訊相同
-			if (res.get().getCourseTitle().equals(request.getCourseTitle())) {
+			if (res.get().getCourseTitle().equals(course.getCourseTitle())) {
 				return new Response(RtnCode.REPEAT.getMessage());
 			}
-			res.get().setCourseTitle(request.getCourseTitle());
+			res.get().setCourseTitle(course.getCourseTitle());
 			isRevise = true;
 		}
 		// 2-2.修改日期
-		if (StringUtils.hasText(request.getSchedule())) {
+		if (StringUtils.hasText(course.getSchedule())) {
 			// 排除:不符合工作天
-			if (!weekday.contains(request.getSchedule())) {
+			if (!weekday.contains(course.getSchedule())) {
 				return new Response(RtnCode.PATTERN_IS_NOT_MATCH.getMessage());
 			}
 			// 排除:修改資訊與原資訊相同
-			if (res.get().getSchedule().equals(request.getSchedule())) {
+			if (res.get().getSchedule().equals(course.getSchedule())) {
 				return new Response(RtnCode.REPEAT.getMessage());
 			}
-			res.get().setSchedule(request.getSchedule());
+			res.get().setSchedule(course.getSchedule());
 			isRevise = true;
 		}
 		// 2-3.修改時間
-		if (request.getStartTime() != null || request.getEndTime() != null) {
+		if (course.getStartTime() != null || course.getEndTime() != null) {
 			// 排除:時間不在正常上班時間且開始時間要比結束時間晚
-			if (request.getStartTime().isBefore(Morning) || request.getEndTime().isAfter(Evening)
-					|| request.getStartTime().isAfter(request.getEndTime())) {
+			if (course.getStartTime().isBefore(Morning) || course.getEndTime().isAfter(Evening)
+					|| course.getStartTime().isAfter(course.getEndTime())) {
 				return new Response(RtnCode.PATTERN_IS_NOT_MATCH.getMessage());
 			}
 			// 排除:修改資訊與原資訊相同
-			if (res.get().getStartTime().equals(request.getStartTime())
-					|| res.get().getEndTime().equals(request.getEndTime())) {
+			if (res.get().getStartTime().equals(course.getStartTime())
+					|| res.get().getEndTime().equals(course.getEndTime())) {
 				return new Response(RtnCode.REPEAT.getMessage());
 			}
-			res.get().setStartTime(request.getStartTime());
-			res.get().setEndTime(request.getEndTime());
+			res.get().setStartTime(course.getStartTime());
+			res.get().setEndTime(course.getEndTime());
 			isRevise = true;
 		}
 		// 2-4.修改學分
-		if (request.getCredits() > 0 && request.getCredits() < 4) {
+		if (course.getCredits() > 0 && course.getCredits() < 4) {
 			// 排除:修改資訊與原資訊相同
-			if (res.get().getCredits() == request.getCredits()) {
+			if (res.get().getCredits() == course.getCredits()) {
 				return new Response(RtnCode.REPEAT.getMessage());
 			}
-			res.get().setCredits(request.getCredits());
+			res.get().setCredits(course.getCredits());
 			isRevise = true;
 		}
 
@@ -135,11 +135,11 @@ public class CourseServiceImpl implements CourseService {
 	}
 
 	@Override
-	public Response findCourseInfo(Request request) {
+	public Response findCourseInfo(Course course) {
 		// 存在字串判斷，空或無轉成空字串；執行自定義方法，尋找資料
 		List<Course> courseList = courseDao.searchByNumberOrTitle(
-				StringUtils.hasText(request.getCourseNumber()) ? request.getCourseNumber() : "",
-				StringUtils.hasText(request.getCourseTitle()) ? request.getCourseTitle() : "");
+				StringUtils.hasText(course.getCourseNumber()) ? course.getCourseNumber() : "",
+				StringUtils.hasText(course.getCourseTitle()) ? course.getCourseTitle() : "");
 		return courseList.size() > 0 ? new Response(courseList, RtnCode.SUCCESS.getMessage())
 				: new Response(RtnCode.NOT_FOUND.getMessage());
 	}

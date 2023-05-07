@@ -31,7 +31,7 @@ public class Controller {
 	
 	@GetMapping(value = "revise_course")
 	public Response reviseCourse(@RequestBody Request request) {
-		return courseService.reviseCourse(request);
+		return courseService.reviseCourse(request.getCourse());
 	}
 	
 	@DeleteMapping(value = "delete_course")
@@ -41,7 +41,7 @@ public class Controller {
 
 	@GetMapping(value = "find_course_info")
 	public Response findCourseInfoByNumber(@RequestBody Request request) {
-		return courseService.findCourseInfo(request);
+		return courseService.findCourseInfo(request.getCourse());
 	}
 
 	@PostMapping(value = "add_student")
@@ -49,7 +49,7 @@ public class Controller {
 		return studentService.addStudent(request.getStudentID(), request.getStudentName());
 	}
 	
-	@GetMapping(value = "delete_student")
+	@DeleteMapping(value = "delete_student")
 	public Response deleteStudent(@RequestBody Request request) {
 		return studentService.deleteStudent(request.getStudentID());
 	}
