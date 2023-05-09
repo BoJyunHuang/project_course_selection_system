@@ -43,7 +43,7 @@ public interface StudentDao extends JpaRepository<Student, String> {
 	@Transactional
 	@Modifying
 	@Query("update Student s set s.courseNumbers = :numbers, s.creditsLimit = :limit where s.studentID = :ID")
-	public int reviseStudentCredits(@Param("ID") String studentID, @Param("numbers") String courseNumbers,
+	public int updateStudentCredits(@Param("ID") String studentID, @Param("numbers") String courseNumbers,
 			@Param("limit") int creditsLimit);
 
 }

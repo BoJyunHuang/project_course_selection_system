@@ -29,6 +29,14 @@ public class Student {
 		super();
 	}
 
+	public Student(String studentID, String name, String courseNumbers, int creditsLimit) {
+		super();
+		this.studentID = studentID;
+		this.name = name;
+		this.courseNumbers = courseNumbers;
+		this.creditsLimit = creditsLimit;
+	}
+
 	public Student(String studentID, String name) {
 		super();
 		this.studentID = studentID;

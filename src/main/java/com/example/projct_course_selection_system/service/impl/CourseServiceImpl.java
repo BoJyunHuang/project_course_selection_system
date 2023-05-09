@@ -103,11 +103,6 @@ public class CourseServiceImpl implements CourseService {
 					|| course.getStartTime().isAfter(course.getEndTime())) {
 				return new Response(RtnCode.PATTERN_IS_NOT_MATCH.getMessage());
 			}
-			// 排除:修改資訊與原資訊相同
-			if (res.get().getStartTime().equals(course.getStartTime())
-					|| res.get().getEndTime().equals(course.getEndTime())) {
-				return new Response(RtnCode.REPEAT.getMessage());
-			}
 			res.get().setStartTime(course.getStartTime());
 			res.get().setEndTime(course.getEndTime());
 			isRevise = true;

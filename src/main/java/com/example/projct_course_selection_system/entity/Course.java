@@ -56,6 +56,18 @@ public class Course {
 		this.credits = credits;
 	}
 
+	public Course(String courseNumber, String courseTitle, String schedule, LocalTime startTime, LocalTime endTime,
+			int credits, int personLimit) {
+		super();
+		this.courseNumber = courseNumber;
+		this.courseTitle = courseTitle;
+		this.schedule = schedule;
+		this.startTime = startTime;
+		this.endTime = endTime;
+		this.credits = credits;
+		this.personLimit = personLimit;
+	}
+
 	public String getCourseNumber() {
 		return courseNumber;
 	}
